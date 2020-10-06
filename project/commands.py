@@ -71,7 +71,7 @@ stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 working_trees = []
 for output in process.stdout.readlines():
     project_name = 'personal_assistant'
-    if ('code' or 'pycharm' or 'gedit') and ('personal_assistant' or 'auth0') in output:
+    if ('pycharm' or 'gedit') and ('personal_assistant' or 'auth0') in output:
         sd = output.split("/home")[-1]
         working_trees.append(f"/home{sd}".strip('\n'))
 
