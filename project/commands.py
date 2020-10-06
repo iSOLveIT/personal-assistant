@@ -78,13 +78,13 @@ for output in process.stdout.readlines():
 print(f"Output: {working_trees}")
 
 msg = "testing app"
-commit_command = f"git commit -m {msg.replace(' ', '_')}"
+# Git Add (Stage Files) and Git Commit(Commit Files)
 for working_tree in working_trees:
     subprocess.Popen(shlex.split("git add ."),
     stdout=subprocess.PIPE,universal_newlines=True, 
     cwd=working_tree)
 
-    process_two = subprocess.Popen(shlex.split(commit_command),
+    process_two = subprocess.Popen(shlex.split(f"git commit -m {msg.replace(' ', '_')}"),
     stdout=subprocess.PIPE,universal_newlines=True, 
     cwd=working_tree, stderr=subprocess.PIPE)
 
