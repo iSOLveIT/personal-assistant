@@ -71,7 +71,7 @@ stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 working_trees = []
 for output in process.stdout.readlines():
     project_name = 'personal_assistant'
-    if ('pycharm' or 'gedit') and ('personal_assistant' or 'auth0') in output:
+    if ('code' and project_name) in output:
         sd = output.split("/home")[-1]
         working_trees.append(f"/home{sd}".strip('\n'))
 
@@ -86,10 +86,11 @@ for working_tree in working_trees:
 
     process_two = subprocess.Popen(shlex.split(commit_command),
     stdout=subprocess.PIPE,universal_newlines=True, 
-    cwd=working_tree)
+    cwd=working_tree, stderr=subprocess.PIPE)
 
-    output, _ = process_two.communicate()
-    print('Git info', output)
+    output, error = process_two.communicate()
+    print('Git info: ', output)
+    print(str(error.capitalize()))
 
 
 
