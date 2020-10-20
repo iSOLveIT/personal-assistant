@@ -1,0 +1,92 @@
+[
+    {
+        "name": "MUSIC_PLAYER",
+        "value": [
+          {"app_name": "rhythmbox", "description": "Pre-installed music player"}
+        ],
+        "allow_change": false
+    },
+    {
+        "name": "VIDEO_PLAYER",
+        "value": [
+          {"app_name": "totem", "description": "Pre-installed video player"},
+          {"app_name": "vlc", "description": "VLC media player"}
+        ],
+        "allow_change": true
+    },
+    {
+        "name": "FOLDER_BROWSER",
+        "value": [
+          {"app_name": "nautilus", "description": "Pre-installed file manager"}
+        ],
+        "allow_change": false
+    },
+    {
+        "name": "TEXT_EDITOR",
+        "value": [
+          {"app_name": "gedit", "description": "Pre-installed graphical text editor"},
+          {"app_name": "nano", "description": "Pre-installed command-prompt editor"},
+          {"app_name": "code", "description": "Visual Studio Code IDE by Microsoft"}
+        ],
+        "allow_change": true
+    },
+    {
+        "name": "IDE",
+        "value": [
+          {"app_name": "code", "description": "Visual Studio Code IDE by Microsoft"},
+          {"app_name": "pycharm-community", "description": "PyCharm IDE by JetBrains"}
+        ],
+        "allow_change": true
+    },
+    {
+        "name": "WEB_BROWSER",
+        "value": [
+          {"app_name": "firefox", "description": "Pre-installed web browser by Mozilla"},
+          {"app_name": "google-chrome", "description": "Google Chrome web browser by Google"},
+          {"app_name": "epiphany", "description": "The GNOME web browser"}
+        ],
+        "allow_change": true
+    },
+    {
+        "name": "TERMINAL",
+        "value": [
+          {"app_name": "gnome-terminal", "description": "Pre-install bash terminal"}
+        ],
+        "allow_change": false
+    },
+    {
+        "name": "MAIL_CLIENT",
+        "value": [
+          {"app_name": "thunderbird", "description": "Pre-installed GUI mail client by Mozilla"}
+        ],
+        "allow_change": false
+    },
+    {
+        "name": "CALENDAR",
+        "value": [
+          {"app_name": "gnome-calendar", "description": "Pre-installed GNOME calendar"}
+        ],
+        "allow_change": false
+    },
+    {
+        "name": "CALCULATOR",
+        "value": [
+          {"app_name": "gnome-calculator", "description": "Pre-installed GNOME calculator"}
+        ],
+        "allow_change": false
+    },
+    {
+        "name": "PDF_READER",
+        "value": [
+          {"app_name": "evince", "description": "Pre-installed PDF document viewer"}
+        ],
+        "allow_change": false
+    },
+    {
+        "name": "SCREENSHOT",
+        "value": [
+          {"app_name": "gnome-screenshot", "description": "Pre-installed GNOME screenshot app"}
+        ],
+        "allow_change": false
+    }
+]
