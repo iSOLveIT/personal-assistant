@@ -1,0 +1,50 @@
+[
+  {
+    "name": "MUSIC_PLAYER",
+    "value": "rhythmbox"
+  },
+  {
+    "name": "VIDEO_PLAYER",
+    "value": "totem"
+  },
+  {
+    "name": "FOLDER_BROWSER",
+    "value": "nautilus"
+  },
+  {
+    "name": "TEXT_EDITOR",
+    "value": "gedit"
+  },
+  {
+    "name": "IDE",
+    "value": "code"
+  },
+  {
+    "name": "WEB_BROWSER",
+    "value": "firefox"
+  },
+  {
+    "name": "TERMINAL",
+    "value": "gnome-terminal"
+  },
+  {
+    "name": "MAIL_CLIENT",
+    "value": "thunderbird"
+  },
+  {
+    "name": "CALENDAR",
+    "value": "gnome-calendar"
+  },
+  {
+    "name": "CALCULATOR",
+    "value": "gnome-calculator"
+  },
+  {
+    "name": "PDF_READER",
+    "value": "evince"
+  },
+  {
+    "name": "SCREENSHOT_APP",
+    "value": "gnome-screenshot"
+  }
+]
