@@ -17,7 +17,7 @@ from pathlib import Path
 from dotenv import load_dotenv, set_key
 
 # Local application/library specific imports
-from application import intro, app_installation
+from application import *
 from application.config import AppStartedConfig
 from application.app_commands import Main
 
@@ -27,22 +27,22 @@ load_dotenv(dotenv_path=env_path)
 
 
 def run():
-    t0 = datetime.datetime.now()
     is_configured = bool(int(os.getenv("IS_CONFIGURED")))
-    print(is_configured)
     if is_configured is False:
-        settings = app_installation()
+        settings: str = app_installation()
         set_key(env_path, "IS_CONFIGURED", '1')
         set_key(env_path, "SETTINGS", settings)
         load_dotenv(dotenv_path=env_path, override=True)
 
     configuration: Dict[str, str] = AppStartedConfig().apply_settings()
     Main(configuration)
-    print(intro())
-    dt = datetime.datetime.now() - t0
-    print("Synchronous version done in {:,.2f} seconds.".format(dt.total_seconds()))
+    print(find_file())
+    # print(version())
 
 
 if __name__ == "__main__":
-    while True:
-        run()
+    # while True:
+    t0 = datetime.datetime.now()
+    run()
+    dt = datetime.datetime.now() - t0
+    print("App done in {:,.2f} seconds.".format(dt.total_seconds()))

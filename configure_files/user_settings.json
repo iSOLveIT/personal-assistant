@@ -13,15 +13,15 @@
   },
   {
     "name": "TEXT_EDITOR",
-    "value": "gedit"
+    "value": "nano"
   },
   {
     "name": "IDE",
-    "value": "code"
+    "value": "pycharm-community"
   },
   {
     "name": "WEB_BROWSER",
-    "value": "firefox"
+    "value": "google-chrome-stable"
   },
   {
     "name": "TERMINAL",
@@ -44,7 +44,7 @@
     "value": "evince"
   },
   {
-    "name": "SCREENSHOT_APP",
+    "name": "SCREENSHOT",
     "value": "gnome-screenshot"
   }
 ]

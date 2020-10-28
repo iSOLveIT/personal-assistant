@@ -1,5 +1,6 @@
+from typing import List, Dict, Optional
 
-app_default_settings = [
+app_default_settings: List[Dict[str, str]] = [
     {
         "name": "MUSIC_PLAYER",
         "value": "rhythmbox"
@@ -45,12 +46,12 @@ app_default_settings = [
         "value": "evince"
     },
     {
-        "name": "SCREENSHOT_APP",
+        "name": "SCREENSHOT",
         "value": "gnome-screenshot"
     }
 ]
 
-supported_apps = [
+supported_apps: List[Dict[str, Optional[str]]] = [
     {
         "name": "MUSIC_PLAYER",
         "value": [

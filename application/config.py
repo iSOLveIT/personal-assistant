@@ -2,7 +2,8 @@ import json
 import os
 import subprocess
 import shlex
-from typing import List, Dict, Tuple, Optional
+from functools import lru_cache
+from typing import List, Dict, Tuple, Optional, Type
 
 from pathlib import Path
 
@@ -11,28 +12,25 @@ from .envs import app_default_settings, supported_apps
 basedir = Path()
 
 
-class VerifyAppCommand(object):
-    def __init__(self, command: str) -> None:
-        self.command = command
+@lru_cache
+def verify_app_installed(app_name: str) -> Tuple[bool, str]:
+    try:
+        app_check: subprocess.Popen[str] = subprocess.Popen(shlex.split(f"dpkg -s {app_name}"),
+                                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                            universal_newlines=True, cwd=basedir.home())
+        std_out, std_error = app_check.communicate()
 
-    def check_app_info(self) -> Tuple[bool, str]:
-        try:
-            app_check: subprocess.Popen[str] = subprocess.Popen(shlex.split(f"dpkg -s {self.command}"),
-                                                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                                universal_newlines=True, cwd=basedir.home())
-            std_out, std_error = app_check.communicate()
+        if std_error:
+            snap_check: subprocess.Popen[str] = subprocess.Popen(shlex.split(f"snap list | grep '{app_name}'"),
+                                                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                                 universal_newlines=True, cwd=basedir.home())
+            snap_std_out, snap_std_error = snap_check.communicate()
+            return (True, "Snap Application") if snap_std_out else (False, "Not Found")
 
-            if std_error:
-                snap_check: subprocess.Popen[str] = subprocess.Popen(shlex.split(f"snap list | grep '{self.command}'"),
-                                                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                                     universal_newlines=True, cwd=basedir.home())
-                snap_std_out, snap_std_error = snap_check.communicate()
-                return (True, "Snap Application") if snap_std_out else (False, "Not Found")
+        return True, "Debian Application"
 
-            return True, "Debian Application"
-
-        except FileNotFoundError:
-            return False, "Not Found"
+    except FileNotFoundError:
+        return False, "Not Found"
 
 
 class AppInstallationConfig(object):
@@ -51,11 +49,12 @@ class AppInstallationConfig(object):
             return self.initial_default_config()
 
     @staticmethod
+    @lru_cache
     def initial_default_config() -> str:
         default_config: List[Dict[str, str]] = app_default_settings
 
         for i in default_config:
-            verify_app: Tuple[bool, str] = VerifyAppCommand(i["value"]).check_app_info()
+            verify_app: Tuple[bool, str] = verify_app_installed(i["value"])
             if verify_app[0] is False:
                 print(f"Download {i['value']} for linux")
             continue
@@ -63,21 +62,23 @@ class AppInstallationConfig(object):
         return "Successfully Configured."
 
     @staticmethod
+    @lru_cache
     def initial_user_config() -> str:
-        apps_supported: List[Dict[str, str]] = supported_apps
-        app_allowed_to_change: List[Dict[str, str]] = [app for app in apps_supported if app["allow_change"] is True]
+        apps_supported: List[Dict[str, Optional[str]]] = supported_apps
+        app_allowed_to_change: List[Dict[str, Optional[str]]] = [
+            item for item in apps_supported if item["allow_change"] is True]
         apps_default_config: List[Dict[str, str]] = app_default_settings
 
         user_selected_choices: Dict[str, str] = {}
         for app_setting in app_allowed_to_change:
             print(f"Choose a default {app_setting['name']} app from the menu below")
             for choice in app_setting["value"]:
-                print(f"\t[{int(app_setting['value'].index(choice) + 1)}]: {choice['app_name']}",
-                      f"\t - {choice['description']}")
+                print(f"\t[{int(app_setting['value'].index(choice) + 1)}]: {choice.get('app_name')}",
+                      f"\t - {choice.get('description')}")
 
             try:
                 answer: int = int(input("Enter the number assigned to an app in the menu above: "))
-                selected_app_name: Optional = app_setting["value"][int(answer - 1)]["app_name"]
+                selected_app_name: Optional[str] = app_setting["value"][int(answer - 1)].get("app_name")
             except (ValueError, IndexError):
                 print("Invalid input or Nothing entered")
                 selected_app_name = None
@@ -90,7 +91,7 @@ class AppInstallationConfig(object):
                 if app is None:
                     continue
 
-                verify_app: Tuple[bool, str] = VerifyAppCommand(app).check_app_info()
+                verify_app: Tuple[bool, str] = verify_app_installed(app)
                 if verify_app[0] is False:
                     print(f"Download {app} for linux")
                 else:
@@ -108,7 +109,6 @@ class AppInstallationConfig(object):
 
 class AppStartedConfig:
     def apply_settings(self):
-        print("Apply settings", os.getenv("SETTINGS"))
         if os.getenv("SETTINGS", default="default_settings") != "user_settings":
             return self.default_settings()
 
@@ -116,9 +116,10 @@ class AppStartedConfig:
         if is_user_settings is None:
             print("App needs to be re-configured. Click on the configuration tab.")
             return self.default_settings()
-        return self.user_settings()
+        return is_user_settings
 
     @staticmethod
+    @lru_cache
     def default_settings():
         settings_: List[Dict[str, str]] = app_default_settings
 
@@ -127,6 +128,7 @@ class AppStartedConfig:
         return config
 
     @staticmethod
+    @lru_cache
     def user_settings():
         config_dir = basedir.cwd().joinpath("configure_files")
         config_path: Path = config_dir.joinpath("user_settings.json")
@@ -136,7 +138,6 @@ class AppStartedConfig:
         # Convert the config into a usable Python dictionary object using dictionary comprehension
         config: Dict[str, str] = dict((i["name"], i["value"]) for i in settings_)
         return config
-
 
 # thj = Path().cwd().parent.joinpath("configure_files")
 # print(thj)
