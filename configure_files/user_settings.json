@@ -1,0 +1,50 @@
+[
+  {
+    "name": "MUSIC_PLAYER",
+    "value": "rhythmbox"
+  },
+  {
+    "name": "VIDEO_PLAYER",
+    "value": "vlc"
+  },
+  {
+    "name": "FOLDER_BROWSER",
+    "value": "nautilus"
+  },
+  {
+    "name": "TEXT_EDITOR",
+    "value": "nano"
+  },
+  {
+    "name": "IDE",
+    "value": "pycharm-community"
+  },
+  {
+    "name": "WEB_BROWSER",
+    "value": "google-chrome-stable"
+  },
+  {
+    "name": "TERMINAL",
+    "value": "gnome-terminal"
+  },
+  {
+    "name": "MAIL_CLIENT",
+    "value": "thunderbird"
+  },
+  {
+    "name": "CALENDAR",
+    "value": "gnome-calendar"
+  },
+  {
+    "name": "CALCULATOR",
+    "value": "gnome-calculator"
+  },
+  {
+    "name": "PDF_READER",
+    "value": "evince"
+  },
+  {
+    "name": "SCREENSHOT",
+    "value": "gnome-screenshot"
+  }
+]
