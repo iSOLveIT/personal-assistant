@@ -14,7 +14,8 @@ from typing import Optional, Tuple, List
 
 
 # Local application/library specific imports
-from .app_commands import OpenFolder, OpenApp, FindFilePath
+from .app_commands import (OpenFolder, OpenApp, FindFilePath,
+                           OpenVideoFile, totem_commands)
 from .config import AppInstallationConfig, verify_app_installed
 
 
@@ -75,6 +76,33 @@ def find_file() -> str:
         return finished
     except EOFError:
         pass
+
+
+def watch_video() -> str:
+    try:
+        search_term: str = input("Enter the name of the video file: ")
+        v0: datetime.datetime = datetime.datetime.now()
+        finished: str = OpenVideoFile(search_term).watch_video()
+        sub: datetime.timedelta = datetime.datetime.now() - v0
+        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+        return finished
+    except EOFError:
+        pass
+
+
+def totem_options() -> str:
+    try:
+        search_term: str = input("Enter option: ")
+        sep: List[str] = search_term.split(" ")
+        k = sep[0]
+        v0: datetime.datetime = datetime.datetime.now()
+        finished: str = totem_commands(k)
+        sub: datetime.timedelta = datetime.datetime.now() - v0
+        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+        return finished
+    except EOFError:
+        pass
+
 
 # apps = [
 #         "vlc", "totem", "twinux", "vlc", "rhythmbox", "twinux", "fromscratch",

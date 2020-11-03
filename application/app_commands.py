@@ -11,6 +11,7 @@
 # import os
 import subprocess
 import shlex
+import shutil
 from typing import List, Tuple, Optional, Dict
 from functools import lru_cache
 # from difflib import get_close_matches
@@ -78,7 +79,7 @@ class FindFolderPath(object):
             continue
 
         if len(folder_path) == 0:
-            return f"{self.folder_name} folder not found."
+            return "Folder not found."
         return self.choose_path(folder_path)
 
     @staticmethod
@@ -93,7 +94,7 @@ class FindFolderPath(object):
                 return selected_path
 
             except (ValueError, IndexError):
-                return "Invalid input or Nothing entered"
+                return "Invalid input entered"
 
         chosen: Path = paths_found[0]
         return chosen
@@ -221,7 +222,7 @@ class FindFilePath(object):
             continue
 
         if len(file_path) == 0:
-            return f"{self.file_name} file not found."
+            return "File not found."
         return self.choose_path(file_path)
 
     @staticmethod
@@ -236,7 +237,7 @@ class FindFilePath(object):
                 return selected_path
 
             except (ValueError, IndexError):
-                return "Invalid input or Nothing entered"
+                return "Invalid input entered"
 
         chosen: Path = paths_found[0]
         return chosen
@@ -251,7 +252,7 @@ class FindFilePath(object):
                 f"-or \( -iname '*{self.file_name}*.mp4' -or -iname '*{self.file_name}*.mkv' -type f \)"
             ]
             command: str = " ".join(list_commands)
-            
+
             search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
                                                              stdout=subprocess.PIPE, universal_newlines=True,
                                                              stderr=subprocess.PIPE, cwd=basedir.home())
@@ -277,7 +278,7 @@ class FindFilePath(object):
                 f"-or -iname '*{self.file_name}*.ogg' -type f"
             ]
             command: str = " ".join(list_commands)
-            
+
             search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
                                                              stdout=subprocess.PIPE, universal_newlines=True,
                                                              stderr=subprocess.PIPE, cwd=basedir.home())
@@ -303,7 +304,7 @@ class FindFilePath(object):
                 f"-or -iname '*{self.file_name}*.avi' -type f"
             ]
             command: str = " ".join(list_commands)
-            
+
             search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
                                                              stdout=subprocess.PIPE, universal_newlines=True,
                                                              stderr=subprocess.PIPE, cwd=basedir.home())
@@ -331,7 +332,7 @@ class FindFilePath(object):
                 f"-or \( -iname '*{self.file_name}*.doc*' -or -iname '*{self.file_name}*.mp4' -type f \)"
             ]
             command: str = " ".join(list_commands)
-            
+
             search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
                                                              stdout=subprocess.PIPE, universal_newlines=True,
                                                              stderr=subprocess.PIPE, cwd=basedir.home())
@@ -357,7 +358,7 @@ class FindFilePath(object):
                 f"-or -iname '*{self.file_name}*.webp' -type f"
             ]
             command: str = " ".join(list_commands)
-            
+
             search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
                                                              stdout=subprocess.PIPE, universal_newlines=True,
                                                              stderr=subprocess.PIPE, cwd=basedir.home())
@@ -397,7 +398,7 @@ class Main(object):
 class OpenFolder(Main):
     def __init__(self, search_keyword: str, folder_name: str) -> None:
         super().__init__(Main.configuration)
-        self.path_current_working_directory: Path = basedir
+        # self.path_current_working_directory: Path = basedir
         self.search_keyword: str = search_keyword
         self.folder_name: str = folder_name
 
@@ -409,7 +410,7 @@ class OpenFolder(Main):
     def open_folder_in_ide(self, folder_path: Path) -> str:
         print("IDE", self.ide)
         if verify_app_installed(self.ide)[0] is False:
-            return f"{self.ide.capitalize()} not installed"
+            return f"{self.ide.capitalize()} app not installed"
         try:
             x = subprocess.Popen(shlex.split(f"{self.ide} {folder_path}"),
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -417,29 +418,29 @@ class OpenFolder(Main):
             # g, _ = x.communicate()
             return "Done"
 
-        except FileNotFoundError as error:
-            return error.strerror
+        except FileNotFoundError:
+            return f"{self.ide.capitalize()} could not open."
 
     def open_folder_in_file_browser(self, folder_path: Path) -> str:
         if verify_app_installed(self.file_browser)[0] is False:
-            return f"{self.file_browser.capitalize()} not installed"
+            return f"{self.file_browser.capitalize()} app not installed"
         try:
             subprocess.Popen(shlex.split(f"{self.file_browser} {folder_path}"),
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                              universal_newlines=True, cwd=basedir.home())
             return "Done"
 
-        except FileNotFoundError as error:
-            return error.strerror
+        except FileNotFoundError:
+            return f"{self.file_browser.capitalize()} could not open."
 
     def open_with_ide_or_file_browser(self, path: Path) -> str:
-        self.path_current_working_directory = path  # Update path for current working directory
+        # self.path_current_working_directory = path  # Update path for current working directory
 
         if 'browse folder' in self.search_keyword:
             return self.open_folder_in_file_browser(path)
         elif 'edit folder' in self.search_keyword:
             return self.open_folder_in_ide(path)
-        return "Folder couldn't be opened."
+        return "Un-supported command."
 
 
 class OpenApp(Main):
@@ -459,17 +460,7 @@ class OpenApp(Main):
 
         is_app_installed: Tuple[bool, str] = verify_app_installed(app)
         if is_app_installed[0] is False:
-            return f"{app.capitalize()} not installed"
-
-        if is_app_installed[1] == "Snap Application":
-            try:
-                subprocess.Popen(shlex.split(f"{app}"),
-                                 stderr=subprocess.PIPE, stdout=subprocess.PIPE,
-                                 universal_newlines=True, cwd=basedir.home())
-
-                return "Done"
-            except FileNotFoundError as error:
-                return error.strerror
+            return f"{app.capitalize()} is not installed."
 
         try:
             subprocess.Popen(shlex.split(f"{app}"),
@@ -477,19 +468,80 @@ class OpenApp(Main):
                              universal_newlines=True, cwd=basedir.home())
             return "Done"
 
-        except FileNotFoundError as error:
-            return error.strerror
+        except FileNotFoundError:
+            return f"{app.capitalize()} could not open."
 
 
 class OpenVideoFile(Main):
-    def __init__(self) -> None:
+    def __init__(self, video_file: str) -> None:
         super().__init__(Main.configuration)
-        # find -iname "*mulan*.mp4" -or -iname "*mulan*.mkv" -type f
+        self.video_file = video_file
+
+    def watch_video(self):
+        file_path: Path = FindFilePath(self.video_file).find_file_paths()
+        if str(file_path).endswith(('.mp4', 'mkv', 'avi')) is False:
+            return "Un-supported video file format."
+        if type(file_path) is not (PosixPath or WindowsPath):
+            return "File not found."
+        if self.video_player == "totem":
+            try:
+                subprocess.Popen(shlex.split(f"{self.video_player} --play {file_path}"),
+                                 stderr=subprocess.PIPE, stdout=subprocess.PIPE,
+                                 universal_newlines=True, cwd=basedir.home())
+                return "Done"
+
+            except FileNotFoundError:
+                return f"{self.video_player} app not installed."
+        try:
+            subprocess.Popen(shlex.split(f"{self.video_player} {file_path}"),
+                             stderr=subprocess.PIPE, stdout=subprocess.PIPE,
+                             universal_newlines=True, cwd=basedir.home())
+            return "Done"
+
+        except FileNotFoundError:
+            return f"{self.video_player} app not installed."
+
+
+def totem_commands(command: str):
+    list_commands: Dict[str, str] = {
+        "play": "--play",
+        "pause": "--pause",
+        "forward": "--seek-fwd",
+        "backward": "--seek-bwd",
+        "increase": "--volume-up",
+        "decrease": "--volume-down",
+        "mute": "--mute",
+        "fullscreen": "--fullscreen",
+        "quit": "--quit"
+    }
+    if command not in list_commands.keys():
+        return "Un-supported command."
+    option: str = list_commands[command]
+    try:
+        subprocess.Popen(shlex.split(f"totem {option}"),
+                         stderr=subprocess.PIPE, stdout=subprocess.PIPE,
+                         universal_newlines=True, cwd=basedir.home())
+        return "Done"
+
+    except FileNotFoundError:
+        return "Totem app not installed."
 
 
 class SearchOnline(Main):
     def __init__(self, search_term: str) -> None:
         super().__init__(Main.configuration)
+
+
+def disk_info():
+    disk_usage = shutil.disk_usage("/home/isolveit")
+    gigabyte = 1_000_000_000
+    free = (disk_usage.free/gigabyte) * 1
+    used = (disk_usage.used/gigabyte) * 1
+    total = (disk_usage.total/gigabyte) * 1
+    return (f"Free space: {free.__round__(2)}Gb",
+            f"Used space: {used.__round__(2)}Gb",
+            f"Total space: {total.__round__(2)}Gb")
+
 
 # Music player -> rhythmbox "`find -iname "*drown*.mp3" -type f`"
 # Video player -> totem --play iceblog-2020-08-16_07.09.05.mp4

@@ -5,7 +5,7 @@
   },
   {
     "name": "VIDEO_PLAYER",
-    "value": "totem"
+    "value": "vlc"
   },
   {
     "name": "FOLDER_BROWSER",
