@@ -3,7 +3,7 @@ import os
 import subprocess
 import shlex
 from functools import lru_cache
-from typing import List, Dict, Tuple, Optional, Type
+from typing import List, Dict, Tuple, Optional
 
 from pathlib import Path
 
@@ -55,10 +55,9 @@ class AppInstallationConfig(object):
 
         for i in default_config:
             verify_app: Tuple[bool, str] = verify_app_installed(i["value"])
-            if verify_app[0] is False:
-                print(f"Download {i['value']} for linux")
-            continue
-
+            if verify_app[0] is True:
+                # TODO: Put all apps not installed in a list and show it to user in readable form
+                continue
         return "Successfully Configured."
 
     @staticmethod
@@ -92,9 +91,8 @@ class AppInstallationConfig(object):
                     continue
 
                 verify_app: Tuple[bool, str] = verify_app_installed(app)
-                if verify_app[0] is False:
-                    print(f"Download {app} for linux")
-                else:
+                if verify_app[0] is True:
+                    # TODO: Put all apps not installed in a list and show it to user in readable form
                     i["value"] = app
             continue
 

@@ -13,7 +13,7 @@
   },
   {
     "name": "TEXT_EDITOR",
-    "value": "nano"
+    "value": "gedit"
   },
   {
     "name": "IDE",
@@ -21,7 +21,7 @@
   },
   {
     "name": "WEB_BROWSER",
-    "value": "google-chrome-stable"
+    "value": "google-chrome"
   },
   {
     "name": "TERMINAL",

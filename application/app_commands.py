@@ -9,9 +9,12 @@
 
 # Standard library imports
 # import os
+import re
 import subprocess
 import shlex
 import shutil
+import webbrowser
+from re import Match
 from typing import List, Tuple, Optional, Dict
 from functools import lru_cache
 # from difflib import get_close_matches
@@ -249,7 +252,10 @@ class FindFilePath(object):
                 f"find ./Documents",
                 f"\( -iname '*{self.file_name}*.doc*' -or -iname '*{self.file_name}*.zip' -type f \)",
                 f"-or \( -iname '*{self.file_name}*.pdf' -or -iname '*{self.file_name}*.txt' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.mp4' -or -iname '*{self.file_name}*.mkv' -type f \)"
+                f"-or \( -iname '*{self.file_name}*.pem' -or -iname '*{self.file_name}*.json' -type f \)",
+                f"-or \( -iname '*{self.file_name}*.mp4' -or -iname '*{self.file_name}*.mkv' -type f \)",
+                f"-or \( -iname '*{self.file_name}*.mp3' -or -iname '*{self.file_name}*.ogg' -type f \)",
+                f"-or \( -iname '*{self.file_name}*.jp*g' -or -iname '*{self.file_name}*.png' -type f \)"
             ]
             command: str = " ".join(list_commands)
 
@@ -328,8 +334,10 @@ class FindFilePath(object):
                 f"find ./Downloads",
                 f"\( -iname '*{self.file_name}*.pdf' -or -iname '*{self.file_name}*.zip' -type f \)",
                 f"-or \( -iname '*{self.file_name}*.png' -or -iname '*{self.file_name}*.jp*g' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.pdf' -or -iname '*{self.file_name}*.zip' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.doc*' -or -iname '*{self.file_name}*.mp4' -type f \)"
+                f"-or \( -iname '*{self.file_name}*.pem' -or -iname '*{self.file_name}*.json' -type f \)",
+                f"-or \( -iname '*{self.file_name}*.doc*' -or -iname '*{self.file_name}*.mp4' -type f \)",
+                f"-or \( -iname '*{self.file_name}*.mkv' -or -iname '*{self.file_name}*.mp3' -type f \)",
+                f"-or \( -iname '*{self.file_name}*.txt' -or -iname '*{self.file_name}*.ogg' -type f \)"
             ]
             command: str = " ".join(list_commands)
 
@@ -408,7 +416,6 @@ class OpenFolder(Main):
             if type(find_folder_path) is PosixPath or WindowsPath else find_folder_path
 
     def open_folder_in_ide(self, folder_path: Path) -> str:
-        print("IDE", self.ide)
         if verify_app_installed(self.ide)[0] is False:
             return f"{self.ide.capitalize()} app not installed"
         try:
@@ -472,17 +479,20 @@ class OpenApp(Main):
             return f"{app.capitalize()} could not open."
 
 
-class OpenVideoFile(Main):
-    def __init__(self, video_file: str) -> None:
+class MediaPlayer(Main):
+    def __init__(self, media_file_name: str) -> None:
         super().__init__(Main.configuration)
-        self.video_file = video_file
+        self.media_file_name: str = media_file_name
 
-    def watch_video(self):
-        file_path: Path = FindFilePath(self.video_file).find_file_paths()
-        if str(file_path).endswith(('.mp4', 'mkv', 'avi')) is False:
+    @lru_cache
+    def watch_video(self) -> str:
+        file_path: Path = FindFilePath(self.media_file_name).find_file_paths()
+        if str(file_path).endswith(('.mp4', '.mkv', '.avi')) is False:
             return "Un-supported video file format."
+
         if type(file_path) is not (PosixPath or WindowsPath):
             return "File not found."
+
         if self.video_player == "totem":
             try:
                 subprocess.Popen(shlex.split(f"{self.video_player} --play {file_path}"),
@@ -501,7 +511,24 @@ class OpenVideoFile(Main):
         except FileNotFoundError:
             return f"{self.video_player} app not installed."
 
+    @lru_cache
+    def play_music(self) -> str:
+        file_path: Path = FindFilePath(self.media_file_name).find_file_paths()
+        if str(file_path).endswith(('.mp3', '.ogg')) is False:
+            return "Un-supported video file format."
+        if type(file_path) is not (PosixPath or WindowsPath):
+            return "File not found."
+        try:
+            subprocess.Popen(shlex.split(f"{self.music_player} {file_path}"),
+                             stderr=subprocess.PIPE, stdout=subprocess.PIPE,
+                             universal_newlines=True, cwd=basedir.home())
+            return "Done"
 
+        except FileNotFoundError:
+            return f"{self.music_player} app not installed."
+
+
+@lru_cache
 def totem_commands(command: str):
     list_commands: Dict[str, str] = {
         "play": "--play",
@@ -524,24 +551,95 @@ def totem_commands(command: str):
         return "Done"
 
     except FileNotFoundError:
-        return "Totem app not installed."
+        return "Videos app not installed."
 
 
 class SearchOnline(Main):
     def __init__(self, search_term: str) -> None:
         super().__init__(Main.configuration)
+        self.keywords: str = search_term
+
+    @lru_cache
+    def search(self) -> None:
+        url: str = f"https://www.google.com/search?q={self.keywords}"
+        browse: webbrowser.BaseBrowser = webbrowser.get(self.web_browser)
+        browse.open_new_tab(url)
+
+    @lru_cache
+    def locate(self) -> None:
+        url: str = f"https://www.google.com/maps/search/{self.keywords}"
+        browse: webbrowser.BaseBrowser = webbrowser.get(self.web_browser)
+        browse.open_new_tab(url)
 
 
-def disk_info():
-    disk_usage = shutil.disk_usage("/home/isolveit")
-    gigabyte = 1_000_000_000
-    free = (disk_usage.free/gigabyte) * 1
-    used = (disk_usage.used/gigabyte) * 1
-    total = (disk_usage.total/gigabyte) * 1
+class ViewFile(Main):
+    def __init__(self, file_name: str) -> None:
+        super().__init__(Main.configuration)
+        self.file_name: str = file_name
+
+    @lru_cache
+    def selector(self) -> str:
+        file_path: Path = FindFilePath(self.file_name).find_file_paths()
+        if str(file_path).endswith(('.txt', '.json', '.pdf', '.pem')) is False:
+            return "Un-supported file format."
+
+        result: Optional[Match[str]] = re.search(r".pdf$", str(file_path), re.IGNORECASE)
+        if result:
+            return self.open_file_in_pdf_reader(file_path)
+        return self.open_file_in_text_editor(file_path)
+
+    @lru_cache
+    def open_file_in_text_editor(self, file_path: Path) -> str:
+        if verify_app_installed(self.text_editor)[0] is False:
+            return f"{self.text_editor.capitalize()} not installed."
+        try:
+            subprocess.Popen(shlex.split(f"{self.text_editor} {file_path}"),
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             universal_newlines=True, cwd=basedir.home())
+            return "Done"
+
+        except FileNotFoundError:
+            return f"{self.text_editor.capitalize()} could not open."
+
+    @lru_cache
+    def open_file_in_pdf_reader(self, file_path: Path) -> str:
+        if verify_app_installed(self.pdf_reader)[0] is False:
+            return f"{self.pdf_reader.capitalize()} not installed."
+        try:
+            subprocess.Popen(shlex.split(f"{self.pdf_reader} {file_path}"),
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             universal_newlines=True, cwd=basedir.home())
+            return "Done"
+
+        except FileNotFoundError:
+            return f"{self.pdf_reader.capitalize()} could not open."
+
+
+@lru_cache
+def open_dir_in_terminal(folder_name: str) -> str:
+    folder_path: Path = FindFolderPath(folder_name).find_folder_paths()
+    if verify_app_installed("gnome-terminal")[0] is False:
+        return f"Gnome Terminal app not installed."
+    try:
+        subprocess.Popen(shlex.split(f"gnome-terminal --working-directory={folder_path}"),
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                         universal_newlines=True, cwd=basedir.home())
+        return "Done"
+
+    except FileNotFoundError:
+        return f"Gnome Terminal could not open."
+
+
+@lru_cache
+def disk_info() -> Tuple[str, str, str]:
+    disk_usage = shutil.disk_usage(basedir.home())
+    gigabyte: int = 1_000_000_000
+    free: float = (disk_usage.free / gigabyte) * 1
+    used: float = (disk_usage.used / gigabyte) * 1
+    total: float = (disk_usage.total / gigabyte) * 1
     return (f"Free space: {free.__round__(2)}Gb",
             f"Used space: {used.__round__(2)}Gb",
             f"Total space: {total.__round__(2)}Gb")
-
 
 # Music player -> rhythmbox "`find -iname "*drown*.mp3" -type f`"
 # Video player -> totem --play iceblog-2020-08-16_07.09.05.mp4

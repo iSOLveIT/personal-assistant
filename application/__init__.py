@@ -15,7 +15,8 @@ from typing import Optional, Tuple, List
 
 # Local application/library specific imports
 from .app_commands import (OpenFolder, OpenApp, FindFilePath,
-                           OpenVideoFile, totem_commands)
+                           totem_commands, SearchOnline, open_dir_in_terminal,
+                           MediaPlayer, ViewFile)
 from .config import AppInstallationConfig, verify_app_installed
 
 
@@ -78,11 +79,20 @@ def find_file() -> str:
         pass
 
 
-def watch_video() -> str:
+def media_player() -> str:
     try:
-        search_term: str = input("Enter the name of the video file: ")
+        search_term: str = input("Enter media command: ").lower()
+        sep: List[str] = search_term.split(" ")
+        k, j = " ".join(sep[:1]), " ".join(sep[1:])
+        if k == "watch":
+            v0: datetime.datetime = datetime.datetime.now()
+            finished: str = MediaPlayer(j).watch_video()
+            sub: datetime.timedelta = datetime.datetime.now() - v0
+            print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+            return finished
+
         v0: datetime.datetime = datetime.datetime.now()
-        finished: str = OpenVideoFile(search_term).watch_video()
+        finished: str = MediaPlayer(j).play_music()
         sub: datetime.timedelta = datetime.datetime.now() - v0
         print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
         return finished
@@ -103,6 +113,58 @@ def totem_options() -> str:
     except EOFError:
         pass
 
+
+def browsing() -> str:
+    try:
+        search_term: str = input("Enter option: ").lower()
+        sep: List[str] = search_term.split(" ")
+        k, j = sep[0], " ".join(sep[1:])
+        if k == "locate":
+            v0: datetime.datetime = datetime.datetime.now()
+            SearchOnline(j).locate()
+            sub: datetime.timedelta = datetime.datetime.now() - v0
+            print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+            return "Done"
+
+        v0: datetime.datetime = datetime.datetime.now()
+        SearchOnline(j).search()
+        sub: datetime.timedelta = datetime.datetime.now() - v0
+        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+        return "Done"
+
+    except EOFError:
+        pass
+
+
+def terminal_dir() -> str:
+    try:
+        search_term: str = input("Enter option: ")
+        sep: List[str] = search_term.split(" ")
+        k, j = " ".join(sep[:3]), " ".join(sep[3:])
+        folder_name: str = j.strip()  # strip any whitespace at the beginning and end of text
+        v0: datetime.datetime = datetime.datetime.now()
+        finished: str = open_dir_in_terminal(folder_name)
+        sub: datetime.timedelta = datetime.datetime.now() - v0
+        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+        return finished
+    except EOFError:
+        pass
+
+
+def file_viewer() -> str:
+    try:
+        search_term: str = input("Enter option: ").lower()
+        sep: List[str] = search_term.split(" ")
+        k, j = "".join(sep[:2]), " ".join(sep[2:])
+        file_name: str = j.strip()
+        v0: datetime.datetime = datetime.datetime.now()
+        finished: str = ViewFile(file_name).selector()
+        sub: datetime.timedelta = datetime.datetime.now() - v0
+        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+        return finished
+
+    except EOFError:
+        pass
 
 # apps = [
 #         "vlc", "totem", "twinux", "vlc", "rhythmbox", "twinux", "fromscratch",

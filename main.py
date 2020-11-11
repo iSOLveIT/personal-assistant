@@ -19,7 +19,7 @@ from dotenv import load_dotenv, set_key
 # Local application/library specific imports
 from application import *
 from application.config import AppStartedConfig
-from application.app_commands import Main, disk_info
+from application.app_commands import Main
 
 
 env_path = Path('.').resolve().joinpath('configure_files', 'my_pa.env')
@@ -36,7 +36,7 @@ def run():
 
     configuration: Dict[str, str] = AppStartedConfig().apply_settings()
     Main(configuration)
-    print(watch_video())
+    print(file_viewer())
     # print(version())
 
 

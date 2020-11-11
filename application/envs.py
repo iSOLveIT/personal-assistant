@@ -78,7 +78,6 @@ supported_apps: List[Dict[str, Optional[str]]] = [
         "name": "TEXT_EDITOR",
         "value": [
           {"app_name": "gedit", "description": "Pre-installed graphical text editor"},
-          {"app_name": "nano", "description": "Pre-installed command-prompt editor"},
           {"app_name": "code", "description": "Visual Studio Code IDE by Microsoft"}
         ],
         "allow_change": True
@@ -95,8 +94,8 @@ supported_apps: List[Dict[str, Optional[str]]] = [
         "name": "WEB_BROWSER",
         "value": [
           {"app_name": "firefox", "description": "Pre-installed web browser by Mozilla"},
-          {"app_name": "google-chrome-stable", "description": "Google Chrome web browser by Google"},
-          {"app_name": "epiphany", "description": "The GNOME web browser"}
+          {"app_name": "google-chrome", "description": "Google Chrome web browser by Google"},
+          {"app_name": "opera", "description": "Opera web browser by Opera Software"}
         ],
         "allow_change": True
     },
