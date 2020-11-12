@@ -8,6 +8,7 @@
 
 # Standard library imports
 import datetime
+from functools import lru_cache
 from typing import Optional, Tuple, List
 
 # Related third party imports
@@ -16,7 +17,7 @@ from typing import Optional, Tuple, List
 # Local application/library specific imports
 from .app_commands import (OpenFolder, OpenApp, FindFilePath,
                            totem_commands, SearchOnline, open_dir_in_terminal,
-                           MediaPlayer, ViewFile)
+                           MediaPlayer, ViewFile, FindFolderPath)
 from .config import AppInstallationConfig, verify_app_installed
 
 
@@ -71,7 +72,21 @@ def find_file() -> str:
     try:
         search_term: str = input("Enter the name of the file: ")
         v0: datetime.datetime = datetime.datetime.now()
-        finished: str = FindFilePath(search_term).find_file_paths()
+        finished: str = FindFilePath(search_term, file_extensions=[".pdf", ".txt", ".zip",
+                                                                   ".png", ".jp*g", ".doc*",
+                                                                   ".mp4", ".mkv"]).find_file_paths()
+        sub: datetime.timedelta = datetime.datetime.now() - v0
+        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+        return finished
+    except EOFError:
+        pass
+
+
+def find_folder() -> str:
+    try:
+        search_term: str = input("Enter the name of the folder: ")
+        v0: datetime.datetime = datetime.datetime.now()
+        finished: str = FindFolderPath(search_term).find_folder_paths()
         sub: datetime.timedelta = datetime.datetime.now() - v0
         print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
         return finished
@@ -151,6 +166,7 @@ def terminal_dir() -> str:
         pass
 
 
+@lru_cache
 def file_viewer() -> str:
     try:
         search_term: str = input("Enter option: ").lower()

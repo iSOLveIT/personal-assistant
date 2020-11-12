@@ -62,31 +62,29 @@ basedir = Path()
 
 class FindFolderPath(object):
     def __init__(self, folder_name: str) -> None:
-        self.folder_name = folder_name
+        self.folder_name: str = folder_name
+        self.folder_path: List[Path] = []
 
     @lru_cache
     def find_folder_paths(self) -> Optional:
-        directories: Dict[str, Optional] = {
-            'docs': self.dir_in_documents(),
-            'music': self.dir_in_music(),
-            'video': self.dir_in_videos(),
-            'download': self.dir_in_downloads(),
-            'pics': self.dir_in_pictures()
-        }
+        directories: List[str] = ["Documents", "Music",
+                                  "Videos", "Downloads", "Pictures"]
 
         folder_path: List = []
-        for i in directories.values():
-            data = i
+        for i in directories:
+            data: List[Path] = self.dir_in_home(i)
             if type(data) == list:
                 folder_path += data
             continue
 
         if len(folder_path) == 0:
             return "Folder not found."
-        return self.choose_path(folder_path)
+        self.folder_path = folder_path
+        return self.choose_path()
 
-    @staticmethod
-    def choose_path(paths_found: List[Path]) -> Optional:
+    @lru_cache
+    def choose_path(self) -> Optional:
+        paths_found: List[Path] = self.folder_path
         if (len(paths_found)) > 1:
             choices: List[Tuple[int, Path]] = [(int(paths_found.index(path)), path) for path in paths_found]
             print("Select the correct path you want from the menu below.")
@@ -103,90 +101,10 @@ class FindFolderPath(object):
         return chosen
 
     @lru_cache
-    def dir_in_documents(self) -> Optional:
+    def dir_in_home(self, directory: str) -> Optional:
         try:
             search: subprocess.Popen[str] = subprocess.Popen(shlex.split(
-                f"find ./Documents -iname '{self.folder_name}' -type d "),
-                stdout=subprocess.PIPE, universal_newlines=True,
-                stderr=subprocess.PIPE, cwd=basedir.home())
-
-            results: Tuple[str, str] = search.communicate()
-            stdout, _ = results
-            output: str = stdout.rstrip('\n')
-            if not output:
-                return []
-            folders_paths_found: List[Path] = [basedir.home().joinpath(path.replace(" ", "\ ")) for path in
-                                               output.split('\n')]
-            return folders_paths_found
-
-        except FileNotFoundError as error:
-            return error.strerror
-
-    @lru_cache
-    def dir_in_music(self) -> Optional:
-        try:
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(
-                f"find ./Music -iname '{self.folder_name}' -type d "),
-                stdout=subprocess.PIPE, universal_newlines=True,
-                stderr=subprocess.PIPE, cwd=basedir.home())
-
-            results: Tuple[str, str] = search.communicate()
-            stdout, _ = results
-            output: str = stdout.rstrip('\n')
-            if not output:
-                return []
-            folders_paths_found: List[Path] = [basedir.home().joinpath(path.replace(" ", "\ ")) for path in
-                                               output.split('\n')]
-            return folders_paths_found
-
-        except FileNotFoundError as error:
-            return error.strerror
-
-    @lru_cache
-    def dir_in_videos(self) -> Optional:
-        try:
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(
-                f"find ./Videos -iname '{self.folder_name}' -type d "),
-                stdout=subprocess.PIPE, universal_newlines=True,
-                stderr=subprocess.PIPE, cwd=basedir.home())
-
-            results: Tuple[str, str] = search.communicate()
-            stdout, _ = results
-            output: str = stdout.rstrip('\n')
-            if not output:
-                return []
-            folders_paths_found: List[Path] = [basedir.home().joinpath(path.replace(" ", "\ ")) for path in
-                                               output.split('\n')]
-            return folders_paths_found
-
-        except FileNotFoundError as error:
-            return error.strerror
-
-    @lru_cache
-    def dir_in_downloads(self) -> Optional:
-        try:
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(
-                f"find ./Downloads -iname '{self.folder_name}' -type d "),
-                stdout=subprocess.PIPE, universal_newlines=True,
-                stderr=subprocess.PIPE, cwd=basedir.home())
-
-            results: Tuple[str, str] = search.communicate()
-            stdout, _ = results
-            output: str = stdout.rstrip('\n')
-            if not output:
-                return []
-            folders_paths_found: List[Path] = [basedir.home().joinpath(path.replace(" ", "\ ")) for path in
-                                               output.split('\n')]
-            return folders_paths_found
-
-        except FileNotFoundError as error:
-            return error.strerror
-
-    @lru_cache
-    def dir_in_pictures(self) -> Optional:
-        try:
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(
-                f"find ./Pictures -iname '{self.folder_name}' -type d "),
+                f"find ./{directory} -iname '{self.folder_name}' -type d "),
                 stdout=subprocess.PIPE, universal_newlines=True,
                 stderr=subprocess.PIPE, cwd=basedir.home())
 
@@ -204,32 +122,48 @@ class FindFolderPath(object):
 
 
 class FindFilePath(object):
-    def __init__(self, file_name: str) -> None:
+    def __init__(self, file_name: str, file_extensions: List[str]) -> None:
+        self.list_commands: List[str] = []
         self.file_name: str = file_name
+        self.file_extensions: List[str] = file_extensions
+        self.file_path: List[Path] = []
 
     @lru_cache
     def find_file_paths(self) -> Optional:
-        files: Dict[str, Optional] = {
-            'docs': self.file_in_documents(),
-            'music': self.file_in_music(),
-            'video': self.file_in_videos(),
-            'download': self.file_in_downloads(),
-            'pics': self.file_in_pictures()
-        }
+        extensions: List[str] = self.file_extensions
+
+        for i in range(len(extensions)):
+            try:
+                if len(extensions) == 1:
+                    data: str = f"-iname '*{self.file_name}*{extensions[0]}' -type f"
+                    extensions.pop(0)
+                    self.list_commands.append(data)
+                else:
+                    data: str = f"\( -iname '*{self.file_name}*{extensions[0]}' -or -iname '*{self.file_name}*{extensions[-1]}' -type f \) -or"
+                    extensions.pop(0), extensions.pop(-1)
+                    self.list_commands.append(data)
+            except IndexError:
+                break
+
+        directories: List[str] = ["Documents", "Music",
+                                  "Videos", "Downloads", "Pictures"]
 
         file_path: List = []
-        for i in files.values():
-            data: List = i
+        for i in directories:
+            data: List[Path] = self.files_in_home(i)
             if type(data) == list:
                 file_path += data
             continue
 
         if len(file_path) == 0:
-            return "File not found."
-        return self.choose_path(file_path)
+            return "Folder not found."
 
-    @staticmethod
-    def choose_path(paths_found: List[Path]) -> Optional:
+        self.file_path = file_path
+        return self.choose_path()
+
+    @lru_cache
+    def choose_path(self) -> Optional:
+        paths_found: List[Path] = self.file_path
         if (len(paths_found)) > 1:
             choices: List[Tuple[int, Path]] = [(int(paths_found.index(path)), path) for path in paths_found]
             print("Select the correct path you want from the menu below.")
@@ -246,126 +180,10 @@ class FindFilePath(object):
         return chosen
 
     @lru_cache
-    def file_in_documents(self) -> Optional:
+    def files_in_home(self, directory: str) -> Optional:
         try:
-            list_commands: List[str] = [
-                f"find ./Documents",
-                f"\( -iname '*{self.file_name}*.doc*' -or -iname '*{self.file_name}*.zip' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.pdf' -or -iname '*{self.file_name}*.txt' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.pem' -or -iname '*{self.file_name}*.json' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.mp4' -or -iname '*{self.file_name}*.mkv' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.mp3' -or -iname '*{self.file_name}*.ogg' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.jp*g' -or -iname '*{self.file_name}*.png' -type f \)"
-            ]
-            command: str = " ".join(list_commands)
-
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
-                                                             stdout=subprocess.PIPE, universal_newlines=True,
-                                                             stderr=subprocess.PIPE, cwd=basedir.home())
-
-            results: Tuple[str, str] = search.communicate()
-            stdout, _ = results
-            output: str = stdout.rstrip('\n')
-            if not output:
-                return []
-            files_paths_found: List[Path] = [basedir.home().joinpath(path.replace(" ", "\ ")) for path in
-                                             output.split('\n')]
-            return files_paths_found
-
-        except FileNotFoundError as error:
-            return error.strerror
-
-    @lru_cache
-    def file_in_music(self) -> Optional:
-        try:
-            list_commands: List[str] = [
-                f"find ./Music",
-                f"-iname '*{self.file_name}*.mp3'",
-                f"-or -iname '*{self.file_name}*.ogg' -type f"
-            ]
-            command: str = " ".join(list_commands)
-
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
-                                                             stdout=subprocess.PIPE, universal_newlines=True,
-                                                             stderr=subprocess.PIPE, cwd=basedir.home())
-
-            results: Tuple[str, str] = search.communicate()
-            stdout, _ = results
-            output: str = stdout.rstrip('\n')
-            if not output:
-                return []
-            files_paths_found: List[Path] = [basedir.home().joinpath(path.replace(" ", "\ ")) for path in
-                                             output.split('\n')]
-            return files_paths_found
-
-        except FileNotFoundError as error:
-            return error.strerror
-
-    @lru_cache
-    def file_in_videos(self) -> Optional:
-        try:
-            list_commands: List[str] = [
-                f"find ./Videos",
-                f"\( -iname '*{self.file_name}*.mp4' -or -iname '*{self.file_name}*.mkv' -type f \)",
-                f"-or -iname '*{self.file_name}*.avi' -type f"
-            ]
-            command: str = " ".join(list_commands)
-
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
-                                                             stdout=subprocess.PIPE, universal_newlines=True,
-                                                             stderr=subprocess.PIPE, cwd=basedir.home())
-
-            results: Tuple[str, str] = search.communicate()
-            stdout, _ = results
-            output: str = stdout.rstrip('\n')
-            if not output:
-                return []
-            files_paths_found: List[Path] = [basedir.home().joinpath(path.replace(" ", "\ ")) for path in
-                                             output.split('\n')]
-            return files_paths_found
-
-        except FileNotFoundError as error:
-            return error.strerror
-
-    @lru_cache
-    def file_in_downloads(self) -> Optional:
-        try:
-            list_commands: List[str] = [
-                f"find ./Downloads",
-                f"\( -iname '*{self.file_name}*.pdf' -or -iname '*{self.file_name}*.zip' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.png' -or -iname '*{self.file_name}*.jp*g' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.pem' -or -iname '*{self.file_name}*.json' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.doc*' -or -iname '*{self.file_name}*.mp4' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.mkv' -or -iname '*{self.file_name}*.mp3' -type f \)",
-                f"-or \( -iname '*{self.file_name}*.txt' -or -iname '*{self.file_name}*.ogg' -type f \)"
-            ]
-            command: str = " ".join(list_commands)
-
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
-                                                             stdout=subprocess.PIPE, universal_newlines=True,
-                                                             stderr=subprocess.PIPE, cwd=basedir.home())
-
-            results: Tuple[str, str] = search.communicate()
-            stdout, _ = results
-            output: str = stdout.rstrip('\n')
-            if not output:
-                return []
-            files_paths_found: List[Path] = [basedir.home().joinpath(path.replace(" ", "\ ")) for path in
-                                             output.split('\n')]
-            return files_paths_found
-
-        except FileNotFoundError as error:
-            return error.strerror
-
-    @lru_cache
-    def file_in_pictures(self) -> Optional:
-        try:
-            list_commands: List[str] = [
-                f"find ./Pictures",
-                f"\( -iname '*{self.file_name}*.png' -or -iname '*{self.file_name}*.jp*g' -type f \)",
-                f"-or -iname '*{self.file_name}*.webp' -type f"
-            ]
-            command: str = " ".join(list_commands)
+            list_commands: List[str] = [f"find ./{directory}"] + self.list_commands
+            command: str = " ".join(list_commands).rstrip("-or")
 
             search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
                                                              stdout=subprocess.PIPE, universal_newlines=True,
@@ -486,7 +304,8 @@ class MediaPlayer(Main):
 
     @lru_cache
     def watch_video(self) -> str:
-        file_path: Path = FindFilePath(self.media_file_name).find_file_paths()
+        supported_extensions = ['.mp4', '.mkv', '.avi']
+        file_path: Path = FindFilePath(self.media_file_name, supported_extensions).find_file_paths()
         if str(file_path).endswith(('.mp4', '.mkv', '.avi')) is False:
             return "Un-supported video file format."
 
@@ -513,7 +332,8 @@ class MediaPlayer(Main):
 
     @lru_cache
     def play_music(self) -> str:
-        file_path: Path = FindFilePath(self.media_file_name).find_file_paths()
+        supported_extensions = ['.mp3', '.ogg']
+        file_path: Path = FindFilePath(self.media_file_name, supported_extensions).find_file_paths()
         if str(file_path).endswith(('.mp3', '.ogg')) is False:
             return "Un-supported video file format."
         if type(file_path) is not (PosixPath or WindowsPath):
@@ -579,7 +399,8 @@ class ViewFile(Main):
 
     @lru_cache
     def selector(self) -> str:
-        file_path: Path = FindFilePath(self.file_name).find_file_paths()
+        supported_extensions = ['.txt', '.json', '.pdf', '.pem']
+        file_path: Path = FindFilePath(self.file_name, supported_extensions).find_file_paths()
         if str(file_path).endswith(('.txt', '.json', '.pdf', '.pem')) is False:
             return "Un-supported file format."
 
@@ -640,6 +461,7 @@ def disk_info() -> Tuple[str, str, str]:
     return (f"Free space: {free.__round__(2)}Gb",
             f"Used space: {used.__round__(2)}Gb",
             f"Total space: {total.__round__(2)}Gb")
+
 
 # Music player -> rhythmbox "`find -iname "*drown*.mp3" -type f`"
 # Video player -> totem --play iceblog-2020-08-16_07.09.05.mp4

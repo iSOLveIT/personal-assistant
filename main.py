@@ -36,7 +36,7 @@ def run():
 
     configuration: Dict[str, str] = AppStartedConfig().apply_settings()
     Main(configuration)
-    print(file_viewer())
+    print(find_folder())
     # print(version())
 
 
