@@ -67,7 +67,7 @@ class FindFolderPath(object):
     """
     def __init__(self, folder_name: str) -> None:
         """
-        Initializes the FindFolderPath class.
+        Initializes Class.
 
         :param folder_name: Sets name of folder.
         """
@@ -154,7 +154,7 @@ class FindFilePath(object):
     """
     def __init__(self, file_name: str, file_extensions: List[str]) -> None:
         """
-        Initializes the FindFilePath class.
+        Initializes Class.
 
         :param file_name: Sets name of file.
         :param file_extensions: Sets the file extensions supported.
@@ -270,7 +270,7 @@ class Main(object):
 
     def __init__(self, configuration: Dict[str, str]) -> None:
         """
-        Initializes the Main class.
+        Initializes Class.
 
         :param configuration: Dictionary object containing software's configurations.
         """
@@ -295,7 +295,7 @@ class OpenFolder(Main):
     """
     def __init__(self, search_keyword: str, folder_name: str) -> None:
         """
-        Initializes the OpenFolder class.
+        Initializes Class.
 
         :param search_keyword: Sets command to either open folder in Folder Manager or edit folder in IDE.
         :param folder_name: Sets name of the folder.
@@ -316,7 +316,7 @@ class OpenFolder(Main):
 
     def open_folder_in_ide(self, folder_path: Path) -> str:
         """
-        Function for opening folder in IDE.
+        Function for running bash command to open folder in IDE.
 
         :param folder_path: Sets absolute path for folder.
         :return: Done or Error message.
@@ -336,7 +336,7 @@ class OpenFolder(Main):
 
     def open_folder_in_file_browser(self, folder_path: Path) -> str:
         """
-        Function for opening folder in Folder Manager.
+        Function for running bash command to open folder in Folder Manager.
 
         :param folder_path: Sets absolute path for folder.
         :return: Done or Error message.
@@ -375,7 +375,7 @@ class OpenApp(Main):
 
     def __init__(self, search_keyword: str) -> None:
         """
-        Initializes the OpenApp class.
+        Initializes Class.
 
         :param search_keyword: Sets the name of the app to launch.
         """
@@ -385,7 +385,7 @@ class OpenApp(Main):
     @lru_cache
     def launch_app(self) -> str:
         """
-        Function for launching application on the computer.
+        Function for running bash command to launch application.
         Some apps can't open multiple windows of the app at the same time.
 
         :return: Done or Error message
@@ -421,7 +421,7 @@ class MediaPlayer(Main):
     """
     def __init__(self, media_file_name: str) -> None:
         """
-        Initializes the MediaPlayer class.
+        Initializes Class.
 
         :param media_file_name: Sets the name of video or audio file.
         """
@@ -431,7 +431,7 @@ class MediaPlayer(Main):
     @lru_cache
     def watch_video(self) -> str:
         """
-        Function for opening video file with selected video player.
+        Function for running bash command to open video file with selected video player.
 
         :return: Done or Error message
         """
@@ -456,7 +456,7 @@ class MediaPlayer(Main):
     @lru_cache
     def play_music(self) -> str:
         """
-        Function for opening audio file with selected audio player.
+        Function for running bash command to open audio file with selected audio player.
 
         :return: Done or Error message
         """
@@ -482,7 +482,7 @@ class MediaPlayer(Main):
 @lru_cache
 def totem_commands(command: str):
     """
-    Function used for controlling the video playing in Totem app.
+    Function for running bash commands to control video playing in Totem app.
 
     :param command: Sets the application option.
     :return: Done or Error Message.
@@ -522,7 +522,7 @@ class SearchOnline(Main):
     """
     def __init__(self, search_term: str) -> None:
         """
-        Initializes the SearchOnline class.
+        Initializes Class.
 
         :param search_term: what to search for.
         """
@@ -554,7 +554,7 @@ class ViewFile(Main):
     """
     def __init__(self, file_name: str) -> None:
         """
-        Initializes the ViewFile class.
+        Initializes Class.
 
         :param file_name: Sets the name of the file.
         """
@@ -584,7 +584,7 @@ class ViewFile(Main):
     @lru_cache
     def open_file_in_text_editor(self, file_path: Path) -> str:
         """
-        Function for opening a JSON, TXT or CSV file in a text editor.
+        Function for running bash command to open a JSON, TXT or CSV file in a text editor.
 
         :param file_path: Absolute path of a JSON, TXT or CSV file.
         :return: Done or Error message.
@@ -604,7 +604,7 @@ class ViewFile(Main):
     @lru_cache
     def open_file_in_pdf_reader(self, file_path: Path) -> str:
         """
-        Function for opening a PDF file in a pdf reader
+        Function for running bash command to open a PDF file in a pdf reader
 
         :param file_path: Absolute path of a PDF file.
         :return: Done or Error message.
@@ -646,7 +646,7 @@ class BasicCalculator(Main):
 @lru_cache
 def open_dir_in_terminal(folder_name: str) -> str:
     """
-    A function used for opening a specified folder in the terminal.
+    Function for running bash command to open a specified folder in the terminal.
 
     :param folder_name: Sets the name of the folder.
     :return: Done or Error Message.
@@ -673,7 +673,7 @@ def open_dir_in_terminal(folder_name: str) -> str:
 @lru_cache
 def disk_info() -> Tuple[str, str, str]:
     """
-    A function that gets computer disk information
+    Function that retrieves computer disk information.
 
     :returns: (Free disk space, Used disk space, Total disk space) in gigabytes.
     """
