@@ -36,7 +36,7 @@ def app_installation() -> str:
         pass
 
 
-def intro() -> Optional[str]:
+def open_folder() -> Optional[str]:
     try:
         search_term: str = input("Enter search here: ")
         sep: List[str] = search_term.split(" ")
@@ -47,18 +47,20 @@ def intro() -> Optional[str]:
 
 
 def version() -> Tuple[bool, str]:
-    search_term: str = input("Enter the name of the app you want to verify: ")
-    # print(search_term, verify_app_installed(search_term).cache_info())
-    v0: datetime.datetime = datetime.datetime.now()
-    finished: Tuple[bool, str] = verify_app_installed(search_term.replace(" ", "-"))
-    sub: datetime.timedelta = datetime.datetime.now() - v0
-    print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
-    return finished
+    try:
+        search_term: str = input("Enter the name of the app you want to verify: ").lower()
+        v0: datetime.datetime = datetime.datetime.now()
+        finished: Tuple[bool, str] = verify_app_installed(search_term.replace(" ", "-"))
+        sub: datetime.timedelta = datetime.datetime.now() - v0
+        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+        return finished
+    except EOFError:
+        pass
 
 
 def launch() -> str:
     try:
-        search_term: str = input("Enter the name of the app you want to open: ")
+        search_term: str = input("Enter the name of the app you want to open: ").lower()
         v0: datetime.datetime = datetime.datetime.now()
         finished: str = OpenApp(search_term.replace(" ", "-")).launch_app()
         sub: datetime.timedelta = datetime.datetime.now() - v0
@@ -96,7 +98,7 @@ def find_folder() -> str:
 
 def media_player() -> str:
     try:
-        search_term: str = input("Enter media command: ")
+        search_term: str = input("Enter media command: ").lower()
         sep: List[str] = search_term.split(" ")
         k, j = sep[0], " ".join(sep[1:])
         if k == "watch" or k == "play":
@@ -116,11 +118,10 @@ def media_player() -> str:
 
 def totem_options() -> str:
     try:
-        search_term: str = input("Enter option: ")
-        sep: List[str] = search_term.split(" ")
-        k = sep[0]
+        search_term: str = input("Enter option: ").lower()
+        option: str = search_term.replace(" ", "_")
         v0: datetime.datetime = datetime.datetime.now()
-        finished: str = totem_commands(k)
+        finished: str = totem_commands(option)
         sub: datetime.timedelta = datetime.datetime.now() - v0
         print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
         return finished
@@ -133,34 +134,35 @@ def browsing() -> str:
         search_term: str = input("Enter option: ").lower()
         sep: List[str] = search_term.split(" ")
         k, j = sep[0], " ".join(sep[1:])
-        if k == "locate":
+        if k == "search" or k == "locate":
+            browser_commands: Dict[str, Union[(), ()]] = {
+                "search": SearchOnline(j).search,
+                "locate": SearchOnline(j).locate
+            }
             v0: datetime.datetime = datetime.datetime.now()
-            SearchOnline(j).locate()
+            finished: Union[()] = browser_commands.get(k)
+            finished()
             sub: datetime.timedelta = datetime.datetime.now() - v0
             print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
             return "Done"
-
-        v0: datetime.datetime = datetime.datetime.now()
-        SearchOnline(j).search()
-        sub: datetime.timedelta = datetime.datetime.now() - v0
-        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
-        return "Done"
-
+        return "Invalid command"
     except EOFError:
         pass
 
 
 def terminal_dir() -> str:
     try:
-        search_term: str = input("Enter option: ")
+        search_term: str = input("Enter option: ").lower()
         sep: List[str] = search_term.split(" ")
         k, j = " ".join(sep[:3]), " ".join(sep[3:])
-        folder_name: str = j.strip()  # strip any whitespace at the beginning and end of text
-        v0: datetime.datetime = datetime.datetime.now()
-        finished: str = open_dir_in_terminal(folder_name)
-        sub: datetime.timedelta = datetime.datetime.now() - v0
-        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
-        return finished
+        if k == "open terminal in":
+            folder_name: str = j.strip()  # strip any whitespace at the beginning and end of text
+            v0: datetime.datetime = datetime.datetime.now()
+            finished: str = open_dir_in_terminal(folder_name)
+            sub: datetime.timedelta = datetime.datetime.now() - v0
+            print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+            return finished
+        return "Invalid command"
     except EOFError:
         pass
 
@@ -170,19 +172,14 @@ def file_viewer() -> str:
     try:
         search_term: str = input("Enter option: ").lower()
         sep: List[str] = search_term.split(" ")
-        k, j = "".join(sep[:2]), " ".join(sep[2:])
-        file_name: str = j.strip()
-        v0: datetime.datetime = datetime.datetime.now()
-        finished: str = ViewFile(file_name).selector()
-        sub: datetime.timedelta = datetime.datetime.now() - v0
-        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
-        return finished
-
+        k, j = " ".join(sep[:2]), " ".join(sep[2:])
+        if k == "open file":
+            file_name: str = j.strip()
+            v0: datetime.datetime = datetime.datetime.now()
+            finished: str = ViewFile(file_name).selector()
+            sub: datetime.timedelta = datetime.datetime.now() - v0
+            print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
+            return finished
+        return "Invalid command"
     except EOFError:
         pass
-
-# apps = [
-#         "vlc", "totem", "twinux", "vlc", "rhythmbox", "twinux", "fromscratch",
-#         "evince", "firefox", "totem", "thunderbird", "twinux", "purple-task",
-#         "gedit", "nautilus", "gnome-calendar", "code", "knowte", "gimp"
-#     ]

@@ -8,9 +8,8 @@
 """
 
 # Standard library imports
-import datetime
+from datetime import datetime as dt
 import os
-from typing import Dict
 
 # Related third party imports
 from pathlib import Path
@@ -22,12 +21,13 @@ from application.config import AppStartedConfig
 from application.app_commands import Main
 
 
+# Load environment variables from .env file.
 env_path = Path('.').resolve().joinpath('configure_files', 'my_pa.env')
 load_dotenv(dotenv_path=env_path)
 
 
-def run():
-    is_configured = bool(int(os.getenv("IS_CONFIGURED")))
+def run() -> None:
+    is_configured: bool = bool(int(os.getenv("IS_CONFIGURED")))
     if is_configured is False:
         settings: str = app_installation()
         set_key(env_path, "IS_CONFIGURED", '1')
@@ -36,18 +36,17 @@ def run():
 
     configuration: Dict[str, str] = AppStartedConfig().apply_settings()
     Main(configuration)
-    print(find_folder())
-    # print(version())
+    print(launch())
 
 
 if __name__ == "__main__":
     try:
         print("Press Ctrl-C to terminate while statement")
         while True:
-            t0 = datetime.datetime.now()
+            t0 = dt.now()
             run()
-            dt = datetime.datetime.now() - t0
-            print("App done in {:,.2f} seconds.".format(dt.total_seconds()))
+            t1 = dt.now() - t0
+            print("App done in {:,.2f} seconds.".format(t1.total_seconds()))
             break
     except KeyboardInterrupt:
         print("\nTerminated")

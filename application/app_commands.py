@@ -8,7 +8,6 @@
 """
 
 # Standard library imports
-# import os
 import re
 import subprocess
 import shlex
@@ -496,7 +495,7 @@ def totem_commands(command: str):
         "increase": "--volume-up",
         "decrease": "--volume-down",
         "mute": "--mute",
-        "fullscreen": "--fullscreen",
+        "full_screen": "--fullscreen",
         "quit": "--quit"
     }
     if command not in list_commands.keys():

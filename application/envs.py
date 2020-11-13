@@ -1,4 +1,6 @@
+# Standard library imports
 from typing import List, Dict, Optional
+
 
 app_default_settings: List[Dict[str, str]] = [
     {

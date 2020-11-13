@@ -5,7 +5,7 @@
   },
   {
     "name": "VIDEO_PLAYER",
-    "value": "vlc"
+    "value": "totem"
   },
   {
     "name": "FOLDER_BROWSER",
@@ -17,7 +17,7 @@
   },
   {
     "name": "IDE",
-    "value": "pycharm-community"
+    "value": "code"
   },
   {
     "name": "WEB_BROWSER",
