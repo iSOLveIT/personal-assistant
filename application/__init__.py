@@ -9,7 +9,7 @@
 # Standard library imports
 import datetime
 from functools import lru_cache
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict, Union
 
 # Related third party imports
 
@@ -96,21 +96,20 @@ def find_folder() -> str:
 
 def media_player() -> str:
     try:
-        search_term: str = input("Enter media command: ").lower()
+        search_term: str = input("Enter media command: ")
         sep: List[str] = search_term.split(" ")
-        k, j = " ".join(sep[:1]), " ".join(sep[1:])
-        if k == "watch":
+        k, j = sep[0], " ".join(sep[1:])
+        if k == "watch" or k == "play":
+            media_commands: Dict[str, Union[(), ()]] = {
+                "watch": MediaPlayer(j).watch_video,
+                "play": MediaPlayer(j).play_music
+            }
             v0: datetime.datetime = datetime.datetime.now()
-            finished: str = MediaPlayer(j).watch_video()
+            finished: Union[()] = media_commands.get(k)
             sub: datetime.timedelta = datetime.datetime.now() - v0
             print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
-            return finished
-
-        v0: datetime.datetime = datetime.datetime.now()
-        finished: str = MediaPlayer(j).play_music()
-        sub: datetime.timedelta = datetime.datetime.now() - v0
-        print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
-        return finished
+            return finished()
+        return "Invalid command"
     except EOFError:
         pass
 
