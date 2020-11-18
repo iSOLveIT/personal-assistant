@@ -13,19 +13,18 @@ import subprocess
 import shlex
 import shutil
 import webbrowser
-from re import Match
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, Union, Match, Callable, Any, Type
 from functools import lru_cache
 # from difflib import get_close_matches
 
 # Related third party imports
 from pathlib import Path, PosixPath, WindowsPath
+from word2number import w2n  # type: ignore
 
 # Local application/library specific imports
 from .config import verify_app_installed
 
-
-basedir = Path()    # Represents a filesystem path depending on your system.
+basedir: Any = Path()  # Represents a filesystem path depending on your system.
 
 
 # bashCom = str("ps aux | awk '{ for(i=1;i<=NF;i++) {if ( i >= 11 ) printf $i' '}; printf '\n' }' | grep code | grep personal_assistant")
@@ -64,6 +63,7 @@ class FindFolderPath(object):
     """
     Contains functions for finding folder paths.
     """
+
     def __init__(self, folder_name: str) -> None:
         """
         Initializes Class.
@@ -71,10 +71,10 @@ class FindFolderPath(object):
         :param folder_name: Sets name of folder.
         """
         self.folder_name: str = folder_name
-        self.folder_path: List[Path] = []
+        self.folder_path: List[Union[Path, str]] = []
 
     @lru_cache
-    def find_folder_paths(self) -> Optional:
+    def find_folder_paths(self) -> Union[Path, str]:
         """
         Function for finding directory paths that matches the specified folder name.
 
@@ -83,12 +83,12 @@ class FindFolderPath(object):
         directories: List[str] = ["Documents", "Music",
                                   "Videos", "Downloads", "Pictures"]
 
-        folder_path: List = []
+        folder_path: List[Union[Path, str]] = []
         # Execute a for loop based on the total elements in the :directories: list,
         # then assign each element to the :self.folders_in_home_dir: method.
         for i in directories:
-            data: List[Path] = self.folders_in_home_dir(i)
-            if type(data) == list:
+            data: Union[List[Path], str] = self.folders_in_home_dir(i)
+            if type(data) == Type[List]:
                 folder_path += data
             continue
 
@@ -98,30 +98,33 @@ class FindFolderPath(object):
         return self.choose_path()
 
     @lru_cache
-    def choose_path(self) -> Optional:
+    def choose_path(self) -> Union[Path, str]:
         """
         Function for choosing the preferred path that matches a folder name, if software finds more than one match.
 
         :return: Error message or Folder path.
         """
-        paths_found: List[Path] = self.folder_path
+        paths_found: List[Union[Path, str]] = self.folder_path
         if (len(paths_found)) > 1:
-            choices: List[Tuple[int, Path]] = [(int(paths_found.index(path)), path) for path in paths_found]
+            choices: List[Tuple[int, Union[Path, str]]] = [(int(paths_found.index(path)), path) for path in paths_found]
             print("Select the correct path you want from the menu below.")
-            [print(f"\t[{choice[0] + 1}] - {choice[1]}") for choice in choices]
+
+            choice: Tuple[int, Union[Path, str]]
+            for choice in choices:
+                print(f"\t[{choice[0] + 1}] - {choice[1]}")
             try:
                 answer: int = int(input("Enter the number for the correct path from the menu above: "))
-                selected_path: Path = choices[int(answer - 1)][1]
+                selected_path: Union[Path, str] = choices[int(answer - 1)][1]
                 return selected_path
 
             except (ValueError, IndexError):
                 return "Invalid input entered"
 
-        chosen: Path = paths_found[0]
+        chosen: Union[Path, str] = paths_found[0]
         return chosen
 
     @lru_cache
-    def folders_in_home_dir(self, directory: str) -> Optional:
+    def folders_in_home_dir(self, directory: str) -> Union[List[Path], str]:
         """
         Function for running bash commands in certain directories to find directory paths that matches a given name.
 
@@ -129,7 +132,7 @@ class FindFolderPath(object):
         :return: Folder paths matched or Error message.
         """
         try:
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(
+            search: Any = subprocess.Popen(shlex.split(
                 f"find ./{directory} -iname '{self.folder_name}' -type d "),
                 stdout=subprocess.PIPE, universal_newlines=True,
                 stderr=subprocess.PIPE, cwd=basedir.home())
@@ -144,13 +147,14 @@ class FindFolderPath(object):
             return folders_paths_found
 
         except FileNotFoundError as error:
-            return error.strerror
+            return error.strerror.capitalize()
 
 
 class FindFilePath(object):
     """
     Contains functions for finding file paths.
     """
+
     def __init__(self, file_name: str, file_extensions: List[str]) -> None:
         """
         Initializes Class.
@@ -161,10 +165,10 @@ class FindFilePath(object):
         self.list_commands: List[str] = []
         self.file_name: str = file_name
         self.file_extensions: List[str] = file_extensions
-        self.file_path: List[Path] = []
+        self.file_path: List[Union[Path, str]] = []
 
     @lru_cache
-    def find_file_paths(self) -> Optional:
+    def find_file_paths(self) -> Union[Path, str]:
         """
         Function for finding file paths that matches the specified file name.
 
@@ -181,14 +185,15 @@ class FindFilePath(object):
                 the :data: to the :self.list_commands: list.
         - Break the loop if an error is encountered.
         """
-        for i in range(len(extensions)):
+        num_: int
+        for num_ in range(len(extensions)):
             try:
                 if len(extensions) == 1:
                     data: str = f"-iname '*{self.file_name}*{extensions[0]}' -type f"
                     extensions.pop(0)
                     self.list_commands.append(data)
                 else:
-                    data: str = f"\( -iname '*{self.file_name}*{extensions[0]}' -or -iname '*{self.file_name}*{extensions[-1]}' -type f \) -or"
+                    data = f"\( -iname '*{self.file_name}*{extensions[0]}' -or -iname '*{self.file_name}*{extensions[-1]}' -type f \) -or"
                     extensions.pop(0), extensions.pop(-1)
                     self.list_commands.append(data)
             except IndexError:
@@ -197,13 +202,14 @@ class FindFilePath(object):
         directories: List[str] = ["Documents", "Music",
                                   "Videos", "Downloads", "Pictures"]
 
-        file_path: List = []
+        file_path: List[Union[Path, str]] = []
         # Execute a for loop based on the total elements in the :directories: list,
         # then assign each element to the :self.files_in_home_dir: method.
-        for i in directories:
-            data: List[Path] = self.files_in_home_dir(i)
-            if type(data) == list:
-                file_path += data
+        dir_str: str
+        for dir_str in directories:
+            dir_data: Union[List[Path], str] = self.files_in_home_dir(str(dir_str))
+            if type(dir_data) == Type[List]:
+                file_path += dir_data
             continue
 
         if len(file_path) == 0:
@@ -213,30 +219,33 @@ class FindFilePath(object):
         return self.choose_path()
 
     @lru_cache
-    def choose_path(self) -> Optional:
+    def choose_path(self) -> Union[Path, str]:
         """
         Function for choosing the preferred path that matches a file name, if software finds more than one match.
 
         :return: Error message or File path.
         """
-        paths_found: List[Path] = self.file_path
+        paths_found: List[Union[Path, str]] = self.file_path
         if (len(paths_found)) > 1:
-            choices: List[Tuple[int, Path]] = [(int(paths_found.index(path)), path) for path in paths_found]
+            choices: List[Tuple[int, Union[Path, str]]] = [(int(paths_found.index(path)), path) for path in paths_found]
             print("Select the correct path you want from the menu below.")
-            [print(f"\t[{choice[0] + 1}] - {choice[1]}") for choice in choices]
+
+            choice: Tuple[int, Union[Path, str]]
+            for choice in choices:
+                print(f"\t[{choice[0] + 1}] - {choice[1]}")
             try:
                 answer: int = int(input("Enter the number for the correct path from the menu above: "))
-                selected_path: Path = choices[int(answer - 1)][1]
+                selected_path: Union[Path, str] = choices[int(answer - 1)][1]
                 return selected_path
 
             except (ValueError, IndexError):
                 return "Invalid input entered"
 
-        chosen: Path = paths_found[0]
+        chosen: Union[Path, str] = paths_found[0]
         return chosen
 
     @lru_cache
-    def files_in_home_dir(self, directory: str) -> Optional:
+    def files_in_home_dir(self, directory: str) -> Union[List[Path], str]:
         """
         Function for running bash commands in certain directories to find file paths that matches a given name.
 
@@ -247,9 +256,9 @@ class FindFilePath(object):
             list_commands: List[str] = [f"find ./{directory}"] + self.list_commands
             command: str = " ".join(list_commands).rstrip("-or")
 
-            search: subprocess.Popen[str] = subprocess.Popen(shlex.split(command),
-                                                             stdout=subprocess.PIPE, universal_newlines=True,
-                                                             stderr=subprocess.PIPE, cwd=basedir.home())
+            search: Any = subprocess.Popen(shlex.split(command),
+                                           stdout=subprocess.PIPE, universal_newlines=True,
+                                           stderr=subprocess.PIPE, cwd=basedir.home())
 
             results: Tuple[str, str] = search.communicate()
             stdout, _ = results
@@ -261,7 +270,7 @@ class FindFilePath(object):
             return files_paths_found
 
         except FileNotFoundError as error:
-            return error.strerror
+            return error.strerror.capitalize()
 
 
 class Main(object):
@@ -281,7 +290,6 @@ class Main(object):
         self.text_editor: str = configuration["TEXT_EDITOR"]
         self.web_browser: str = configuration["WEB_BROWSER"]
         self.terminal: str = configuration["TERMINAL"]
-        self.mail_client: str = configuration["MAIL_CLIENT"]
         self.calendar: str = configuration["CALENDAR"]
         self.calculator: str = configuration["CALCULATOR"]
         self.pdf_reader: str = configuration["PDF_READER"]
@@ -292,6 +300,7 @@ class OpenFolder(Main):
     """
     Contains functions for opening folder in either IDE or Folder Manager.
     """
+
     def __init__(self, search_keyword: str, folder_name: str) -> None:
         """
         Initializes Class.
@@ -303,17 +312,17 @@ class OpenFolder(Main):
         self.search_keyword: str = search_keyword
         self.folder_name: str = folder_name
 
-    def run(self) -> Optional[str]:
+    def run(self) -> str:
         """
         Function for finding path of specified folder and assigning it to the open_with_ide_or_file_browser method.
 
         :return: Done or Error message
         """
-        find_folder_path = FindFolderPath(self.folder_name).find_folder_paths()
+        find_folder_path: Union[Path, str] = FindFolderPath(self.folder_name).find_folder_paths()
         return self.open_with_ide_or_file_browser(find_folder_path) \
             if type(find_folder_path) is PosixPath or WindowsPath else find_folder_path
 
-    def open_folder_in_ide(self, folder_path: Path) -> str:
+    def open_folder_in_ide(self, folder_path: Union[Path, str]) -> str:
         """
         Function for running bash command to open folder in IDE.
 
@@ -333,7 +342,7 @@ class OpenFolder(Main):
         except FileNotFoundError:
             return f"{self.ide.capitalize()} could not open."
 
-    def open_folder_in_file_browser(self, folder_path: Path) -> str:
+    def open_folder_in_file_browser(self, folder_path: Union[Path, str]) -> str:
         """
         Function for running bash command to open folder in Folder Manager.
 
@@ -352,7 +361,7 @@ class OpenFolder(Main):
         except FileNotFoundError:
             return f"{self.file_browser.capitalize()} could not open."
 
-    def open_with_ide_or_file_browser(self, path: Path) -> str:
+    def open_with_ide_or_file_browser(self, path: Union[Path, str]) -> str:
         """
         Function for selecting either to open folder in folder manager or to open in IDE
         based on the value for self.search_keyword variable.
@@ -418,6 +427,7 @@ class MediaPlayer(Main):
     """
     Contains functions for watching videos or playing music.
     """
+
     def __init__(self, media_file_name: str) -> None:
         """
         Initializes Class.
@@ -434,8 +444,8 @@ class MediaPlayer(Main):
 
         :return: Done or Error message
         """
-        supported_extensions = ['.mp4', '.mkv', '.avi']
-        file_path: Path = FindFilePath(self.media_file_name, supported_extensions).find_file_paths()
+        supported_extensions: List[str] = ['.mp4', '.mkv', '.avi']
+        file_path: Union[Path, str] = FindFilePath(self.media_file_name, supported_extensions).find_file_paths()
 
         if type(file_path) is not (PosixPath or WindowsPath):
             return "Video file does not exist."
@@ -459,8 +469,8 @@ class MediaPlayer(Main):
 
         :return: Done or Error message
         """
-        supported_extensions = ['.mp3', '.ogg']
-        file_path: Path = FindFilePath(self.media_file_name, supported_extensions).find_file_paths()
+        supported_extensions: List[str] = ['.mp3', '.ogg']
+        file_path: Union[Path, str] = FindFilePath(self.media_file_name, supported_extensions).find_file_paths()
 
         if type(file_path) is not (PosixPath or WindowsPath):
             return "Audio file does not exist."
@@ -479,7 +489,7 @@ class MediaPlayer(Main):
 
 
 @lru_cache
-def totem_commands(command: str):
+def totem_commands(command: str) -> str:
     """
     Function for running bash commands to control video playing in Totem app.
 
@@ -519,6 +529,7 @@ class SearchOnline(Main):
     """
     Contains functions for searching words or location with Google in a browser.
     """
+
     def __init__(self, search_term: str) -> None:
         """
         Initializes Class.
@@ -534,8 +545,8 @@ class SearchOnline(Main):
         Function for searching words with Google in a browser.
         """
         url: str = f"https://www.google.com/search?q={self.keywords}"
-        browse: webbrowser.BaseBrowser = webbrowser.get(self.web_browser)
-        browse.open_new_tab(url)
+        browser_app: webbrowser.BaseBrowser = webbrowser.get(self.web_browser)
+        browser_app.open_new_tab(url)
 
     @lru_cache
     def locate(self) -> None:
@@ -543,14 +554,15 @@ class SearchOnline(Main):
         Function for searching the location of a place with Google Maps in a browser.
         """
         url: str = f"https://www.google.com/maps/search/{self.keywords}"
-        browse: webbrowser.BaseBrowser = webbrowser.get(self.web_browser)
-        browse.open_new_tab(url)
+        browser_app: webbrowser.BaseBrowser = webbrowser.get(self.web_browser)
+        browser_app.open_new_tab(url)
 
 
 class ViewFile(Main):
     """
     Contains functions for opening file in text editor or pdf reader.
     """
+
     def __init__(self, file_name: str) -> None:
         """
         Initializes Class.
@@ -567,8 +579,8 @@ class ViewFile(Main):
 
         :return: Done or Error message.
         """
-        supported_extensions = ['.txt', '.json', '.pdf', '.csv']
-        file_path: Path = FindFilePath(self.file_name, supported_extensions).find_file_paths()
+        supported_extensions: List[str] = ['.txt', '.json', '.pdf', '.csv']
+        file_path: Union[Path, str] = FindFilePath(self.file_name, supported_extensions).find_file_paths()
 
         if type(file_path) is not (PosixPath or WindowsPath):
             return "File does not exist."
@@ -621,25 +633,189 @@ class ViewFile(Main):
             return f"{self.pdf_reader.capitalize()} could not open."
 
 
-class BasicCalculator(Main):
-    def __init__(self, calculations: str):
-        super().__init__(Main.configuration)
+class BasicCalculator:
+    """
+    Contains functions for calculating numbers both in words and figures.
+    """
+
+    def __init__(self, calculations: str) -> None:
+        """
+        Initializes Class.
+
+        :param calculations: Sets arithmetic equation either in words or in figures. E.g. 2 + 2 or two plus three.
+        """
         self.calculations: str = calculations
+        self.equation: List[Any] = []
 
-    def figure_in_words_to_numbers(self):
-        pass
+    @lru_cache
+    def figure_in_words_to_numbers(self, operand_1: str, operand_2: str,
+                                   operator: str) -> Union[int, float, str]:
+        """
+        Function to change figures in words to numbers.
 
-    def get_operands_operators(self):
-        # string_format1 = twenty-nine plus six (figures in words)
-        # string_format2 = -10.89 plus 8.1 (figures in numbers)
-        # operators = "times|plus|minus|divided by|modulo" ([a-z_]+? ??[a-z_\- ]*?)
-        # pattern_for_num_in_words = rf"^([a-z]+? ??[a-z\- ]*?) ({operators}) ([a-z]+? ??[a-z\- ]*?)$"
-        # pattern_for_num_in_numbers = rf"^([\d-]+?\.??[\d]*?) ({operators}) ([\d-]+?\.??[\d]*?)$"
-        pass
+        :param operand_1: Sets the number in words for the first operand.
+        :param operand_2: Sets the number in words for the second operand.
+        :param operator: Sets the operator.
+        :return: Calculated answer or Error message.
+        """
+        operands_in_words: List[str] = [operand_1, operand_2]
+        group_of_number_sentences: List[str] = []
+        is_negative_number: List[bool] = []
+        operands_: str
+        for operands_ in operands_in_words:
+            if "negative" not in operands_:  # check if negative is in input
+                is_negative_number.append(False)  # set is_negative_number to false
+                group_of_number_sentences.append(operands_.strip())
+                continue
+            is_negative_number.append(True)  # set is_negative_number to true
+            group_of_number_sentences.append(operands_.lstrip('negative').strip())
 
-    def perform_calculations(self):
-        # bash_command = gnome-calculator -m basic --solve=12mod3
-        pass
+        figures_returned: List[Union[int, float]] = []
+        for word in group_of_number_sentences:
+            try:
+                figures_returned.append(w2n.word_to_num(word))
+            except ValueError:
+                return "Please enter a valid number word."
+
+        new_figures_returned: List[Union[int, float, str]] = []
+        is_neg_: bool
+        figure_: Union[float, int]
+        for is_neg_, figure_ in zip(is_negative_number, figures_returned):
+            if is_neg_ is False:  # If number was without negative
+                new_figures_returned.append(figure_)
+                continue
+            if type(figure_) is float:  # appends a negative float point number if the figure is of type float
+                new_figures_returned.append(float(f"-{figure_}"))
+            else:
+                # appends a negative integer number if the figure is of type int
+                new_figures_returned.append(int(f"-{figure_}"))
+
+        self.equation = new_figures_returned + [operator]
+        return self.perform_calculations()
+
+    @lru_cache
+    def run(self) -> Union[int, float, str]:
+        """
+        Function for validating the user input and for gathering the operands and operator for calculation.
+
+        :return: Calculated answer or Error message.
+        """
+        operators: str = "[\+\-\*\%\/]|times|plus|minus|divided by|mod|modulo|quotient"
+        pattern_for_num_in_words: str = rf"^([a-z]+? ??[a-z\- ]*?) ({operators}) ([a-z]+? ??[a-z\- ]*?)$"
+        pattern_for_num_in_numbers: str = rf"^([\d-]+?\.??[\d]*?) ??({operators}) ??([\d-]+?\.??[\d]*?)$"
+        operation: str = self.calculations
+        result_1: Optional[Match[str]] = re.search(pattern_for_num_in_numbers, operation)
+        result_2: Optional[Match[str]] = re.search(pattern_for_num_in_words, operation)
+        # if result_1 is None and result_2 is None:
+        #     return "Provide a valid equation (E.g. 12 + 30 or ten plus sixteen)"
+        if result_2 is not None:
+            operand_1, operator, operand_2 = result_2.groups()
+            return self.figure_in_words_to_numbers(operand_1, operand_2, operator)
+
+        if result_1 is not None:
+            operand_1, operator, operand_2 = result_1.groups()
+            try:
+                self.equation = [int(operand_1), int(operand_2), operator]
+                return self.perform_calculations()
+            except ValueError:
+                try:
+                    self.equation = [float(operand_1), float(operand_2), operator]
+                    return self.perform_calculations()
+                except ValueError:
+                    return "Provide a valid equation (E.g. 12 + 30 or ten plus sixteen)"
+        return "Provide a valid equation (E.g. 12 + 30 or ten plus sixteen)"
+
+    @lru_cache
+    def perform_calculations(self) -> Union[int, float, str]:
+        """
+        Function for choosing the arithmetic function to use for calculation based on the operator.
+
+        :return: Calculated answer or Error message.
+        """
+        group_of_operators: Dict[str, Callable[[Union[int, float], Union[int, float]],
+                                               Union[int, float]]] = {
+            'plus': self.plus,
+            'times': self.times,
+            'minus': self.minus,
+            'divided_by': self.divided_by,
+            'quotient': self.divided_by,
+            'modulo': self.modulo,
+            'mod': self.modulo,
+            '+': self.plus,
+            '*': self.times,
+            '-': self.minus,
+            '/': self.divided_by,
+            '%': self.modulo
+        }
+
+        operand_1, operand_2, operator = self.equation
+        operator = operator.replace(" ", "_")
+        get_operator: Optional[Callable[[Union[int, float], Union[int, float]],
+                                        Union[int, float]]] = group_of_operators.get(operator, None)
+        if get_operator is None:
+            return f"{operator} not supported. Click on Help for supported operators."
+
+        return get_operator(operand_1, operand_2)
+
+    @staticmethod
+    @lru_cache
+    def plus(operand_1: Union[int, float], operand_2: Union[int, float]) -> Union[int, float]:
+        """
+        Function for addition.
+
+        :param operand_1: Sets the first operand.
+        :param operand_2: Sets the second operand.
+        :return: Sum of the two operands.
+        """
+        return operand_1 + operand_2
+
+    @staticmethod
+    @lru_cache
+    def times(operand_1: Union[int, float], operand_2: Union[int, float]) -> Union[int, float]:
+        """
+        Function for multiplication.
+
+        :param operand_1: Sets the first operand.
+        :param operand_2: Sets the second operand.
+        :return: Product of the two operands.
+        """
+        return operand_1 * operand_2
+
+    @staticmethod
+    @lru_cache
+    def minus(operand_1: Union[int, float], operand_2: Union[int, float]) -> Union[int, float]:
+        """
+        Function for subtraction.
+
+        :param operand_1: Sets the first operand.
+        :param operand_2: Sets the second operand.
+        :return: Difference of the two operands.
+        """
+        return operand_1 - operand_2
+
+    @staticmethod
+    @lru_cache
+    def divided_by(operand_1: Union[int, float], operand_2: Union[int, float]) -> Union[int, float]:
+        """
+        Function for division.
+
+        :param operand_1: Sets the first operand.
+        :param operand_2: Sets the second operand.
+        :return: Quotient of the two operands.
+        """
+        return operand_1 / operand_2
+
+    @staticmethod
+    @lru_cache
+    def modulo(operand_1: Union[int, float], operand_2: Union[int, float]) -> Union[int, float]:
+        """
+        Function for modulo.
+
+        :param operand_1: Sets the first operand.
+        :param operand_2: Sets the second operand.
+        :return: Remainder of the two operands.
+        """
+        return operand_1 % operand_2
 
 
 @lru_cache
@@ -650,7 +826,7 @@ def open_dir_in_terminal(folder_name: str) -> str:
     :param folder_name: Sets the name of the folder.
     :return: Done or Error Message.
     """
-    folder_path: Path = FindFolderPath(folder_name).find_folder_paths()
+    folder_path: Union[Path, str] = FindFolderPath(folder_name).find_folder_paths()
     # Check if app is installed. Returns: Tuple containing a boolean value and a string
     if verify_app_installed("gnome-terminal")[0] is False:
         return f"Gnome Terminal app not installed."
@@ -676,7 +852,7 @@ def disk_info() -> Tuple[str, str, str]:
 
     :returns: (Free disk space, Used disk space, Total disk space) in gigabytes.
     """
-    disk_usage = shutil.disk_usage(basedir.home())
+    disk_usage: Any = shutil.disk_usage(basedir.home())
     gigabyte: int = 1_000_000_000
     free: float = (disk_usage.free / gigabyte) * 1
     used: float = (disk_usage.used / gigabyte) * 1

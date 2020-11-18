@@ -1,6 +1,5 @@
 # Standard library imports
-from typing import List, Dict, Optional
-
+from typing import List, Dict, Union
 
 app_default_settings: List[Dict[str, str]] = [
     {
@@ -32,10 +31,6 @@ app_default_settings: List[Dict[str, str]] = [
         "value": "gnome-terminal"
     },
     {
-        "name": "MAIL_CLIENT",
-        "value": "thunderbird"
-    },
-    {
         "name": "CALENDAR",
         "value": "gnome-calendar"
     },
@@ -53,7 +48,7 @@ app_default_settings: List[Dict[str, str]] = [
     }
 ]
 
-supported_apps: List[Dict[str, Optional[str]]] = [
+supported_apps: List[Dict[str, Union[bool, List[Dict[str, str]], str]]] = [
     {
         "name": "MUSIC_PLAYER",
         "value": [

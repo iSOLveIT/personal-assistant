@@ -13,7 +13,7 @@ import os
 import subprocess
 import shlex
 from functools import lru_cache
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Any, Union
 
 # Related third party imports
 from pathlib import Path
@@ -21,7 +21,7 @@ from pathlib import Path
 # Local application/library specific imports
 from .envs import app_default_settings, supported_apps
 
-basedir = Path()    # Represents a filesystem path depending on your system.
+basedir: Any = Path()  # Represents a filesystem path depending on your system.
 
 
 @lru_cache
@@ -33,15 +33,15 @@ def verify_app_installed(app_name: str) -> Tuple[bool, str]:
     :returns: (Boolean, "Type of Application") or (Boolean, "Not Found")
     """
     try:
-        app_check: subprocess.Popen[str] = subprocess.Popen(shlex.split(f"dpkg -s {app_name}"),
-                                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                            universal_newlines=True, cwd=basedir.home())
+        app_check: Any = subprocess.Popen(shlex.split(f"dpkg -s {app_name}"),
+                                          stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                          universal_newlines=True, cwd=basedir.home())
         std_out, std_error = app_check.communicate()
 
         if std_error:
-            snap_check: subprocess.Popen[str] = subprocess.Popen(shlex.split(f"snap list | grep '{app_name}'"),
-                                                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                                 universal_newlines=True, cwd=basedir.home())
+            snap_check: Any = subprocess.Popen(shlex.split(f"snap list | grep '{app_name}'"),
+                                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                               universal_newlines=True, cwd=basedir.home())
             snap_std_out, snap_std_error = snap_check.communicate()
             return (True, "Snap Application") if snap_std_out else (False, "Not Found")
 
@@ -103,12 +103,12 @@ class AppInstallationConfig(object):
 
         :return: Successfully Configured.
         """
-        apps_supported: List[Dict[str, Optional[str]]] = supported_apps     # Apps supported by software.
-        app_allowed_to_change: List[Dict[str, Optional[str]]] = [
-            item for item in apps_supported if item["allow_change"] is True]    # Supported apps user can change.
-        apps_default_config: List[Dict[str, str]] = app_default_settings    # Default settings
+        apps_supported: List[Dict[str, Any]] = supported_apps  # Apps supported by software.
+        app_allowed_to_change: List[Dict[str, Any]] = [
+            item for item in apps_supported if item["allow_change"] is True]  # Supported apps user can change.
+        apps_default_config: List[Dict[str, str]] = app_default_settings  # Default settings
 
-        user_selected_choices: Dict[str, str] = {}
+        user_selected_choices: Dict[str, Optional[str]] = {}
         for app_setting in app_allowed_to_change:
             print(f"Choose a default {app_setting['name']} app from the menu below")
             for choice in app_setting["value"]:
@@ -126,7 +126,7 @@ class AppInstallationConfig(object):
 
         for i in apps_default_config:
             if (app_name := i["name"]) in user_selected_choices:
-                app: str = user_selected_choices[app_name]
+                app: Optional[str] = user_selected_choices[app_name]
                 if app is None:
                     continue
 
@@ -150,6 +150,7 @@ class AppStartedConfig:
     """
     Contains functions for applying software settings at runtime.
     """
+
     def apply_settings(self) -> Dict[str, str]:
         """
         Function for selecting which settings method to apply at runtime.
@@ -189,6 +190,8 @@ class AppStartedConfig:
         """
         config_dir: Path = basedir.cwd().joinpath("configure_files")
         config_path: Path = config_dir.joinpath("user_settings.json")
+        if config_path.exists() is False:
+            return None
         with open(str(config_path), "r") as f:
             # Load user settings from settings JSON file.
             settings_: List[Dict[str, str]] = json.load(f)
@@ -196,7 +199,6 @@ class AppStartedConfig:
         # Convert the config into a usable Python dictionary object using dictionary comprehension
         config: Dict[str, str] = dict((i["name"], i["value"]) for i in settings_)
         return config
-
 
 # Errors
 # IndexError: list index out of range

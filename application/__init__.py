@@ -9,7 +9,8 @@
 # Standard library imports
 import datetime
 from functools import lru_cache
-from typing import Optional, Tuple, List, Dict, Union
+from pathlib import Path
+from typing import Optional, Tuple, List, Dict, Union, Callable, Any
 
 # Related third party imports
 
@@ -17,7 +18,7 @@ from typing import Optional, Tuple, List, Dict, Union
 # Local application/library specific imports
 from .app_commands import (OpenFolder, OpenApp, FindFilePath,
                            totem_commands, SearchOnline, open_dir_in_terminal,
-                           MediaPlayer, ViewFile, FindFolderPath)
+                           MediaPlayer, ViewFile, FindFolderPath, BasicCalculator)
 from .config import AppInstallationConfig, verify_app_installed
 
 
@@ -33,20 +34,20 @@ def app_installation() -> str:
     except ValueError:
         return app_installation()
     except EOFError:
-        pass
+        return ''
 
 
-def open_folder() -> Optional[str]:
+def open_folder() -> str:
     try:
         search_term: str = input("Enter search here: ")
         sep: List[str] = search_term.split(" ")
         k, v = " ".join(sep[:2]), " ".join(sep[2:])
         return OpenFolder(search_keyword=k.lower(), folder_name=v).run()
     except EOFError:
-        pass
+        return ''
 
 
-def version() -> Tuple[bool, str]:
+def version() -> Union[Tuple[bool, str], str]:
     try:
         search_term: str = input("Enter the name of the app you want to verify: ").lower()
         v0: datetime.datetime = datetime.datetime.now()
@@ -55,7 +56,7 @@ def version() -> Tuple[bool, str]:
         print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
         return finished
     except EOFError:
-        pass
+        return ''
 
 
 def launch() -> str:
@@ -67,53 +68,53 @@ def launch() -> str:
         print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
         return finished
     except EOFError:
-        pass
+        return ''
 
 
-def find_file() -> str:
+def find_file() -> Union[Path, str]:
     try:
         search_term: str = input("Enter the name of the file: ")
         v0: datetime.datetime = datetime.datetime.now()
-        finished: str = FindFilePath(search_term, file_extensions=[".pdf", ".txt", ".zip",
+        finished: Union[Path, str] = FindFilePath(search_term, file_extensions=[".pdf", ".txt", ".zip",
                                                                    ".png", ".jp*g", ".doc*",
                                                                    ".mp4", ".mkv"]).find_file_paths()
         sub: datetime.timedelta = datetime.datetime.now() - v0
         print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
         return finished
     except EOFError:
-        pass
+        return ''
 
 
-def find_folder() -> str:
+def find_folder() -> Union[Path, str]:
     try:
         search_term: str = input("Enter the name of the folder: ")
         v0: datetime.datetime = datetime.datetime.now()
-        finished: str = FindFolderPath(search_term).find_folder_paths()
+        finished: Union[Path, str] = FindFolderPath(search_term).find_folder_paths()
         sub: datetime.timedelta = datetime.datetime.now() - v0
         print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
         return finished
     except EOFError:
-        pass
+        return ''
 
 
-def media_player() -> str:
+def media_player() -> Any:
     try:
         search_term: str = input("Enter media command: ").lower()
         sep: List[str] = search_term.split(" ")
         k, j = sep[0], " ".join(sep[1:])
         if k == "watch" or k == "play":
-            media_commands: Dict[str, Union[(), ()]] = {
+            media_commands: Dict[str, Any] = {
                 "watch": MediaPlayer(j).watch_video,
                 "play": MediaPlayer(j).play_music
             }
             v0: datetime.datetime = datetime.datetime.now()
-            finished: Union[()] = media_commands.get(k)
+            finished: Any = media_commands.get(k)
             sub: datetime.timedelta = datetime.datetime.now() - v0
             print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
             return finished()
         return "Invalid command"
     except EOFError:
-        pass
+        return ''
 
 
 def totem_options() -> str:
@@ -126,7 +127,7 @@ def totem_options() -> str:
         print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
         return finished
     except EOFError:
-        pass
+        return ''
 
 
 def browsing() -> str:
@@ -135,19 +136,19 @@ def browsing() -> str:
         sep: List[str] = search_term.split(" ")
         k, j = sep[0], " ".join(sep[1:])
         if k == "search" or k == "locate":
-            browser_commands: Dict[str, Union[(), ()]] = {
+            browser_commands: Dict[str, Any] = {
                 "search": SearchOnline(j).search,
                 "locate": SearchOnline(j).locate
             }
             v0: datetime.datetime = datetime.datetime.now()
-            finished: Union[()] = browser_commands.get(k)
+            finished: Any = browser_commands.get(k)
             finished()
             sub: datetime.timedelta = datetime.datetime.now() - v0
             print("Function done in {:,.2f} seconds.".format(sub.total_seconds()))
             return "Done"
         return "Invalid command"
     except EOFError:
-        pass
+        return ''
 
 
 def terminal_dir() -> str:
@@ -164,7 +165,7 @@ def terminal_dir() -> str:
             return finished
         return "Invalid command"
     except EOFError:
-        pass
+        return ''
 
 
 @lru_cache
@@ -182,4 +183,13 @@ def file_viewer() -> str:
             return finished
         return "Invalid command"
     except EOFError:
-        pass
+        return ''
+
+
+def calculator() -> Union[int, float, str]:
+    try:
+        search_term: str = input("Enter equation: ")
+        finished: Union[int, float, str] = BasicCalculator(search_term).run()
+        return finished
+    except EOFError:
+        return ''

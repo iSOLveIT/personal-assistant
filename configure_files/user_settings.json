@@ -28,10 +28,6 @@
     "value": "gnome-terminal"
   },
   {
-    "name": "MAIL_CLIENT",
-    "value": "thunderbird"
-  },
-  {
     "name": "CALENDAR",
     "value": "gnome-calendar"
   },

@@ -145,6 +145,6 @@ cython_debug/
 .idea/workspace.xml
 .idea/misc.xml
 .idea/personal_assistant.iml
-tests/
 *.iml
 *.xml
+requirements.txt
